@@ -1,0 +1,16 @@
+{% extends 'base.html'%}
+{% block content%} 
+{% for article in object_list %}
+    <div>
+        <a href="{% url 'article_view' article.id%}">
+            <p>title {{article.title}}</p>
+            <p>description {{article.description}}</p>
+        </a>
+        <p>date {{article.date}}</p>
+        <p>author {{article.author}}</p>
+        
+    </div>
+    <hr>
+{% endfor %}
+
+{% endblock content%}

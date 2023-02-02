@@ -1,0 +1,110 @@
+{% extends 'base.html'%}
+{% block content%} 
+<p>seen {{no_of_seen}}</p>
+<p>title {{object.title}}</p>
+<p>date {{object.date}}</p>
+<p>description {{object.description}}</p>
+<p>author {{object.author}}</p>
+<hr>
+<h2> Comments </h2>
+
+     {% if user.is_authenticated %}
+      <form action="" method="POST" id="main_form" class="comment_form">
+         <div>
+             <label for="comment">Type Comment here</label>
+            {{ comment_form.content }} {% csrf_token %} <input type="submit" value="Post"></div>
+         </div>
+      </form>
+      {% else %} <h2>You need to Login to comment</h2> 
+      {% endif %}
+
+      {% for comment in comments %}
+         {% if comment.is_parent %}
+            <div >
+               <h3> <b>{{ comment.author }} : </b> {{ comment.content }}</h3> 
+               &nbsp; &nbsp; &nbsp;
+               <div class="rating" comment="{{ comment.id }}">
+                  <div>{{comment.calculate_rating}}</div>
+                  <button class="rating-btn-plus">+1</button>
+                  <button class="rating-btn-minus">-1</button>
+               </div>
+               <form action="" method="POST" id="main_form" class="comment_form">
+                  <div>
+                      &nbsp; &nbsp; &nbsp;<label for="comment">Reply here</label>
+                     &nbsp; &nbsp; &nbsp;<input type="text" name="content"> <input type="hidden" value="{{ comment.pk }}" name="parent"> {% csrf_token %} <input type="submit" value="Post"></div>
+                  </div>
+               </form>
+            </div>
+         {% endif %}
+         
+         {% for replies in comment.children %}
+            <div id="comment-block">
+               <h3>&nbsp; &nbsp; &nbsp; <b>{{ comment.author }} : </b> {{ replies.content }}</h3>
+               &nbsp; &nbsp; &nbsp;
+               <div class="rating">
+                  <div>{{replies.calculate_rating}}</div>
+                  <button class="rating-btn-plus">+1</button>
+                  <button class="rating-btn-minus">-1</button>
+               </div>
+               <form action="" method="POST" id="main_form" class="comment_form">
+                  <div>
+                      &nbsp; &nbsp; &nbsp;<label for="comment">Reply here</label>
+                     &nbsp; &nbsp; &nbsp;<input type="text" name="content"> <input type="hidden" value="{{ comment.pk }}" name="parent"> {% csrf_token %} <input type="submit" value="Post"></div>
+                  </div>
+               </form>
+            </div>
+         {% endfor %}
+      {% endfor %}
+      
+{% endblock content%}
+
+{% block scripts %}
+
+<script>
+   plus_rating = document.querySelectorAll(".rating-btn-plus")
+   minus_rating = document.querySelectorAll(".rating-btn-minus")
+
+   for (i=0: plus_rating.length; i++){
+      plus_rating[i].addEventListener("click", function(){
+         parent = this.parentElement
+         $.ajax({
+           url: "{% url 'set_comment_rating' %}",
+           method:"POST",
+           data:{
+            "comment_id": parent.getAttribute('comment'),
+            "comment_rating": 1,
+            "csrfmiddlewaretoken": "{{csrf_token}}"
+           },
+           success: function (data) {
+               if (JSON.parse(data).status == 'OK'){
+                  old_rating = parent.children[0].innerHTML
+                  parent.children[0].innerHTML = +old_rating + 1
+               }
+            }
+         });
+      });
+   }
+
+   for (i=0: plus_rating.length; i++){
+      plus_rating[i].addEventListener("click", function({
+         parent = this.parentElement
+         $.ajax({
+           url: "{% url 'set_comment_rating' %}",
+           method:"POST",
+           data:{
+            "comment_id": parent.getAttribute('comment'),
+            "comment_rating": -1,
+            "csrfmiddlewaretoken": "{{csrf_token}}"
+           },
+           success: function (data) {
+            if (JSON.parse(data).status == 'OK'){
+               old_rating = parent.children[0].innerHTML
+               parent.children[0].innerHTML = +old_rating - 1
+            }
+         });
+      });
+   }
+
+</script>
+
+{% endblock scripts %}
