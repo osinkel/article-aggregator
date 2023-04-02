@@ -1,5 +1,4 @@
 from django.shortcuts import redirect, render
-from django.http import HttpResponse, JsonResponse
 from django.views import generic
 from aggregator.forms import CommentForm, NewUserForm
 from aggregator.models import Article, ArticleSeenRecord, CustomUser, Domain, Comment, Rating

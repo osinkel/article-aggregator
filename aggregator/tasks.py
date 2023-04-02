@@ -1,4 +1,4 @@
-from aggregator.logic import create_etree, parse_page, parse_rss
+from aggregator.logic.main import create_etree, parse_page, parse_rss
 from aggregator.models import Domain
 import logging
 # from celery import shared_task

@@ -1,4 +1,4 @@
-# done migrations
+# done migrations for celery
 python manage.py migrate django_celery_results
 
 # run to celery servers at the same time (windows)

@@ -1,6 +1,9 @@
 from typing import Any
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
+import logging
+logger = logging.getLogger()
 # from django.contrib.auth.models import CustomUser
 
 
@@ -52,9 +55,6 @@ class ParsingPattern(models.Model):
     def __str__(self):
         return f'{self.name}'
 
-import logging
-logger = logging.getLogger()
-
 class Category(models.Model):
     name = models.CharField(max_length=50)
     order = models.IntegerField()
@@ -72,6 +72,7 @@ class Author(models.Model):
 
 
 class Article(models.Model):
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE, blank=True, null=True, unique=False)
     title = models.CharField(max_length=255, default=None)
     description = models.CharField(max_length=511, default=None)
     content = models.TextField(default=None)

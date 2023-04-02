@@ -1,0 +1,9 @@
+FROM python:3.10.5
+ENV TZ="Europe/Minsk"
+# RUN apt-get update -y && apt-get install celery=5.0.0-3 -y
+
+WORKDIR /src/app
+COPY ./requirements.txt ./requirements.txt
+
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
