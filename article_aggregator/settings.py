@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -38,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_celery_results'
+    'django_celery_results',
+    # 'django_celery_beat'
 ]
 
 AUTH_USER_MODEL = 'aggregator.CustomUser'
@@ -77,6 +79,8 @@ WSGI_APPLICATION = 'article_aggregator.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+import config
+
 DATABASES = {
     # 'default': {
     #     'ENGINE': 'django.db.backends.sqlite3',
@@ -84,11 +88,11 @@ DATABASES = {
     # },
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'article_aggregator',
-        'USER': 'postgres',
-        'PASSWORD': 'admin',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': config.POSTGRES_DB,
+        'USER': config.POSTGRES_USER,
+        'PASSWORD': config.POSTGRES_PASSWORD,
+        'HOST': config.POSTGRES_HOST,
+        'PORT': config.POSTGRES_PORT,
     }
 }
 
@@ -129,16 +133,18 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REDIS_HOST = 'localhost'
-REDIS_PORT = '6379'
 
-CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT  + '/0' #'amqp://localhost:5672'
-# CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT  + '/0' # 'amqp://localhost:5672'
+# CELERY_BROKER_URL = 'redis://' + config.REDIS_HOST + ':' + config.REDIS_PORT  + '/0' #'amqp://localhost:5672'
+CELERY_BROKER_URL = f"amqp://{config.RABBITMQ_DEFAULT_USER}:{config.RABBITMQ_DEFAULT_PASS}@localhost:5672/"
+# CELERY_BROKER_URL = 'amqp://rabbit_user:rabbit_password@rabbitmq:5672/vhost'
+# CELERY_RESULT_BACKEND = 'redis://' + config.REDIS_HOST + ':' + config.REDIS_PORT  + '/0' # 'amqp://localhost:5672'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -148,9 +154,15 @@ CELERY_CACHE_BACKEND = 'default'
 
 
 CELERY_BEAT_SCHEDULE = { # scheduler configuration 
-    'Task_one_schedule' : {  # whatever the name you want 
+    'task_one_schedule' : {  # whatever the name you want 
         'task': 'aggregator.tasks.parse', # name of task with path
         'schedule': 10, # crontab() runs the tasks every minute
+        'kwargs': {'domain_name_to_parse': 'aif.ru'}
+    },
+    'task_two_schedule' : {  # whatever the name you want 
+        'task': 'aggregator.tasks.parse', # name of task with path
+        'schedule': 10, # crontab() runs the tasks every minute
+        'kwargs': {'domain_name_to_parse': 'devby.io'}
     }
 }
 
@@ -161,24 +173,24 @@ CACHES = {
     }
 }
 
-LOGGING = {
-    'version': 1,
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        }
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-        }
-    },
-    'loggers': {
-        'django.db.backends': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-        }
-    }
-}
+# LOGGING = {
+#     'version': 1,
+#     'filters': {
+#         'require_debug_true': {
+#             '()': 'django.utils.log.RequireDebugTrue',
+#         }
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'filters': ['require_debug_true'],
+#             'class': 'logging.StreamHandler',
+#         }
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'level': 'DEBUG',
+#             'handlers': ['console'],
+#         }
+#     }
+# }

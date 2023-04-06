@@ -4,3 +4,6 @@ python manage.py migrate django_celery_results
 # run to celery servers at the same time (windows)
 celery -A article_aggregator worker -l info -P eventlet
 celery -A article_aggregator beat -l info
+
+# for linux only one command to start celery and beat
+celery -A article_aggregator worker -l info -B --scheduler django_celery_beat.schedulers:DatabaseScheduler

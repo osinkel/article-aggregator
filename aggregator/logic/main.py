@@ -55,7 +55,7 @@ def parse_rss(tree: etree,  proterty_for_num_articles: ParsingPattern, propertie
     for article_num in range(1, num_articles+1):
         is_article_exist = False
         article = Article(title=' ', content=' ', description=' ',
-                          image=' ', source_url=' ', guid=' ')
+                          image=' ', source_url=' ', guid=' ', domain=domain)
         article.save()
         for property in properties:
             if property.is_for_parsing:
@@ -105,9 +105,15 @@ def parse_rss(tree: etree,  proterty_for_num_articles: ParsingPattern, propertie
                     article.guid = source_url.rsplit('/', 1)[-1]
                     article.source_url = source_url
                 else:
-                    data = unicodedata.normalize('NFKD', tree.xpath(
-                        f'{common_pattern}[{article_num}]{property.pattern}')[0].replace('\r\n', '').strip())
-                    setattr(article, property.name.name, data)
+                    try:
+                        data = unicodedata.normalize('NFKD', tree.xpath(
+                            f'{common_pattern}[{article_num}]{property.pattern}')[0].replace('\r\n', '').strip())
+                        setattr(article, property.name.name, data)
+                    except:
+                        tree_element = tree.xpath(
+                            f'{common_pattern}[{article_num}]{property.pattern}')
+                        print(f"error --- {property.pattern} --- {tree_element}")
+                        data = ''
             elif property.name.name == 'date_format':
                 date_format = property.pattern
 
@@ -121,11 +127,14 @@ def parse_page(tree: etree, proterty_for_main_page: ParsingPattern, properties: 
     articles_url = [url if url.startswith(
         'http') else f'https://{domain.name}{url}' for url in tree.xpath(proterty_for_main_page.pattern)]
     count = 0
-    for article_url in articles_url:
+    print(f"new to parse - {len(articles_url)}")
+    for     article_url in articles_url:
         try:
             is_article_exist = Article.objects.get(source_url=article_url)
         except Article.DoesNotExist:
             is_article_exist = False
+        except:
+            is_article_exist = True
         if not is_article_exist:
             parse_one_article(properties, domain, article_url)
             logger.warning(f'{domain.name} parsed {count}')
@@ -136,7 +145,7 @@ def parse_page(tree: etree, proterty_for_main_page: ParsingPattern, properties: 
 def parse_one_article(parse_properties: QuerySet, domain: Domain, article_url: str = None):
     tree = create_etree(article_url)
     article = Article(title=' ', content=' ', description=' ',
-                      image=' ', source_url=article_url, guid=article_url.rsplit('/', 1)[-1])
+                      image=' ', source_url=article_url, guid=article_url.rsplit('/', 1)[-1], domain=domain)
     article.save()
     for property in parse_properties:
         if property.is_for_parsing:

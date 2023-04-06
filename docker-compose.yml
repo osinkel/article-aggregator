@@ -1,68 +1,78 @@
 version: '3'
 services:
- article_aggregator-web_server:
-    image: article_aggregator-web_server
-    container_name: article_aggregator
-    restart: always
-    build:
-      context: ./
-      dockerfile: Dockerfile.build
-    ports:
-      - 63440:8080
-    depends_on:
-     - article_aggregator_psql
-    command: ./docker-entrypoint.sh
-    networks:
-      - article_aggregator_net
+#  article_aggregator-web_server:
+#     image: article_aggregator-web_server
+#     container_name: article_aggregator
+#     restart: always
+#     build:
+#       context: ./
+#       dockerfile: Dockerfile.build
+#     ports:
+#       - 63440:8000
+#     depends_on:
+#      - article_aggregator_psql
+#     command: ./docker-entrypoint.sh
+#     networks:
+#       - article_aggregator_net
 
- article_aggregator_psql:
-  image: 'postgres:15'
-  container_name: 'article_aggregator_psql'
-  restart: always
-  ports:
-    - '63441:5432'
-  networks:
-    - article_aggregator_net
-  env_file:
-    - 
+#  article_aggregator_psql:
+#   image: 'postgres:15'
+#   container_name: 'article_aggregator_psql'
+#   # restart: always
+#   ports:
+#     - '63441:5432'
+#   networks:
+#     - article_aggregator_net
+#   env_file:
+#     - .env
 
- celery-worker:
-    image: article_aggregator-celery_worker
-    container_name: article_aggregator-celery_worker
-    build:
-      context: ./
-      dockerfile: Dockerfile.celery
-   #  env_file:
-   #    - .env
-    depends_on:
-      - redis
-    command: "python -m celery -A article_aggregator worker -l info"
-    networks:
-      - article_aggregator_net
+#  celery:
+    # image: article_aggregator-celery_worker
+    # container_name: article_aggregator-celery_worker
+    # build:
+      # context: ./
+      # dockerfile: Dockerfile.celery
+    # # env_file:
+    # #   - .env
+    # depends_on:
+      # - redis
+    # # command: "python -m celery -A article_aggregator worker -l info"
+    # command: "python -m celery -A article_aggregator worker -l info -B --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    # networks:
+      # - article_aggregator_net
 
- celery-beat:
-    image: article_aggregator-celery_beat
-    container_name: article_aggregator-celery_beat
-    build:
-      context: ./
-      dockerfile: Dockerfile.celery
-   #  env_file:
-   #    - .env
-    depends_on:
-      - redis
-    command: "python -m celery -A article_aggregator beat -l info"
-    networks:
-      - article_aggregator_net
+#  celery-beat:
+#     image: article_aggregator-celery_beat
+#     container_name: article_aggregator-celery_beat
+#     build:
+#       context: ./
+#       dockerfile: Dockerfile.celery
+#    #  env_file:
+#    #    - .env
+#     depends_on:
+#       - redis
+#     command: "python -m celery -A article_aggregator beat -l info"
+#     networks:
+#       - article_aggregator_net
     
  redis:
     image: redis:latest
     container_name: redis
     ports:
      - 6379:6379
-    depends_on:
-     - article_aggregator-web_server
+    # depends_on:
+    #  - article_aggregator-web_server
     networks:
       - article_aggregator_net
+
+  rabbitmq:
+    hostname: rabbit
+    image: rabbitmq:3-management
+    env_file:
+      - .env
+    ports:
+      - "5672:5672"  
+      - "15672:15672" 
 
 networks:
   article_aggregator_net:
