@@ -13,4 +13,5 @@ celery
 python-dotenv
 gunicorn
 gevent
+dateparser
 # django_celery_beat

@@ -2,12 +2,13 @@ import datetime
 import logging
 from typing import Any
 import unicodedata
+import dateparser
 import requests
 from lxml import etree
 from datetime import datetime
 from aggregator.models import Article, Author, Category, Domain, ParsingPattern
 from django.db.models.query import QuerySet
-
+import config
 
 logger = logging.getLogger()
 
@@ -81,9 +82,8 @@ def parse_rss(tree: etree,  proterty_for_num_articles: ParsingPattern, propertie
                         article.author = author[0]
                     except Exception as exc:
                         logger.warning(f"article {article_num} haven't author")
-                        author_name = ' '
-                        author = Author.objects.get_or_create(
-                            name=author_name, domain=domain)
+                        author_name = config.UNKNOWN_AUTHOR_NAME
+                        author = Author.objects.get_or_create(name=author_name, domain=domain)
                         article.author = author[0]
                     continue
                 elif property.name.name == 'guid':
@@ -118,7 +118,8 @@ def parse_rss(tree: etree,  proterty_for_num_articles: ParsingPattern, propertie
                 date_format = property.pattern
 
         if not is_article_exist:
-            date = do_date_format(date, date_format, False if domain.language != 'en' else True)
+            # date = do_date_format(date, date_format, False if domain.language != 'en' else True)
+            date = dateparser.parse(date)
             article.date = date
             article.save()
 
@@ -144,6 +145,9 @@ def parse_page(tree: etree, proterty_for_main_page: ParsingPattern, properties: 
 
 def parse_one_article(parse_properties: QuerySet, domain: Domain, article_url: str = None):
     tree = create_etree(article_url)
+    if tree is None:
+        logger.info(f"Tree of page {article_url} don't be created")
+        return
     article = Article(title=' ', content=' ', description=' ',
                       image=' ', source_url=article_url, guid=article_url.rsplit('/', 1)[-1], domain=domain)
     article.save()
@@ -176,8 +180,9 @@ def parse_one_article(parse_properties: QuerySet, domain: Domain, article_url: s
             setattr(article, property.name.name, data)
         elif property.name.name == 'date_format':
             date_format = property.pattern
-    date = do_date_format(
-        date, date_format, False if domain.language != 'en' else True)
+    # date = do_date_format(
+        # date, date_format, False if domain.language != 'en' else True)
+    date = dateparser.parse(date)
     article.date = date
     article.save()
 
@@ -216,17 +221,16 @@ def parse_one_paragraph(text: str, domain: Domain) -> str:
 
 
 def do_date_format(date: str, input_format: str, is_english=False) -> datetime:
-    if is_english:
-        date = ' '.join(item[:3] if item.isalpha() and len(
-            item) != 1 else item for item in date.split())
-    else:
-        try:
-            date = ' '.join(months[item[:3]] if item.isalpha() and len(
-                item) != 1 else item for item in date.split())
-        except KeyError as exc:
-            logger.warning(f'Bad domain language - {exc}')
-            date = ' '.join(item[:3] if item.isalpha() and len(
-                item) != 1 else item for item in date.split())
+    # if is_english:
+        # date = ' '.join(item[:3] if item.isalpha() and len(
+            # item) != 1 else item for item in date.split())
+    # else:
+        # try:
+            # date = ' '.join(months[item[:3]] if item.isalpha() and len(item) != 1 else item for item in date.split())
+        # except KeyError as exc:
+            # logger.warning(f'Bad domain language - {exc}')
+            # date = ' '.join(item[:3] if item.isalpha() and len(item) != 1 else item for item in date.split())
+    # date = ' '.join(item[:3] if item.isalpha() and len(item) != 1 else item for item in date.split())
     date = datetime.strptime(date, input_format)
     return date
 

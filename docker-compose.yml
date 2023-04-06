@@ -55,15 +55,15 @@ services:
 #     networks:
 #       - article_aggregator_net
     
- redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-     - 6379:6379
-    # depends_on:
-    #  - article_aggregator-web_server
-    networks:
-      - article_aggregator_net
+#  redis:
+#     image: redis:latest
+#     container_name: redis
+#     ports:
+#      - 6379:6379
+#     # depends_on:
+#     #  - article_aggregator-web_server
+#     networks:
+#       - article_aggregator_net
 
   rabbitmq:
     hostname: rabbit

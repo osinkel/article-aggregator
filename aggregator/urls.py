@@ -1,15 +1,15 @@
 from django.urls import path
 from aggregator.views import (
-    ArticleDetailView, HomePageView, api_overview, parse,
+    ArticleDetailView, HomePageView, api_overview,
     register_request, login_request, logout_request,
     search_article_by_author, search_article_by_category,
-    search_article_by_date, set_rating_value
+    search_article_by_date, set_rating_value, test_request
 )
 
 urlpatterns = [
     path('', HomePageView.as_view(), name='home'),
     path('api/', api_overview, name='api_list'),
-    path('parse/<str:name>', parse, name='parse'),
+    path('test', test_request, name='test'),
     path("register/", register_request, name="register"),
     path("login/", login_request, name="login"),
     path("logout/", logout_request, name="logout"),

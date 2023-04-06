@@ -152,17 +152,17 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'default'
 
-
+from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = { # scheduler configuration 
     'task_one_schedule' : {  # whatever the name you want 
-        'task': 'aggregator.tasks.parse', # name of task with path
-        'schedule': 10, # crontab() runs the tasks every minute
-        'kwargs': {'domain_name_to_parse': 'aif.ru'}
+        'task': 'aggregator.tasks.parse_article_source', # name of task with path
+        'schedule': crontab(minute='*/5'), # crontab() runs the tasks every minute
+        'kwargs': {'domain_name_to_parse': 'devby.io'}
     },
     'task_two_schedule' : {  # whatever the name you want 
-        'task': 'aggregator.tasks.parse', # name of task with path
-        'schedule': 10, # crontab() runs the tasks every minute
-        'kwargs': {'domain_name_to_parse': 'devby.io'}
+        'task': 'aggregator.tasks.parse_article_source', # name of task with path
+        'schedule': crontab(minute='*/5'), # crontab() runs the tasks every minute
+        'kwargs': {'domain_name_to_parse': 'aif.ru'}
     }
 }
 

@@ -1,8 +1,10 @@
+import traceback
 from django.shortcuts import redirect, render
 from django.views import generic
 from aggregator.forms import CommentForm, NewUserForm
+from aggregator.logic_alternative import parse_domain
 from aggregator.models import Article, ArticleSeenRecord, CustomUser, Domain, Comment, Rating
-from aggregator.tasks import parse as parse_article_in_domain
+from aggregator.tasks import parse_article_source
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -21,14 +23,17 @@ User = get_user_model()
 logger = logging.getLogger()
 
 @api_view(['GET'])
-def parse(request, name: str):
+def test_request(request):
     try:
-        parse_article_in_domain.delay(name)
-        response = ResponseMessage(status=Status.OK, message=f'Parsing by {name} was successfully executed')
+        parse_article_source("aif.ru")
+        # parse_article_in_domain.delay(name)
+        # response = ResponseMessage(status=Status.OK, message=f'Parsing by {name} was successfully executed')
     except Exception as exc:
-        logger.exception(f'Error in parsing - {exc}')
-        response = ResponseMessage(status=Status.BAD_PARSER_NAME, message=f'Not existed parser name - {name}')
-    return Response(response.json())
+        logger.exception(traceback.format_exc())
+        # response = ResponseMessage(status=Status.BAD_PARSER_NAME, message=f'Not existed parser name - {name}')
+    # return Response(response.json())
+    response = Response(status=Status.OK, data='Success!')
+    return response
 
 @api_view(['POST'])
 def search_article_by_category(request):
