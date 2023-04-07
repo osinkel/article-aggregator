@@ -51,7 +51,9 @@ def search_article_by_date(request):
 
 class HomePageView(generic.ListView):
     template_name = 'articles/home.html'
-    model = Article
+    model = Article 
+    queryset = Article.objects.order_by('-date')[:10]
+
 
 class ArticleDetailView(generic.DetailView):
     model = Article

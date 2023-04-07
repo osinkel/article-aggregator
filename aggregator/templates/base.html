@@ -1,4 +1,4 @@
-{% load static %}
+{% comment %} {% load static %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -42,4 +42,60 @@
         {% block scripts %}
         {% endblock scripts %}
     </body>
+</html> {% endcomment %}
+
+
+
+{% load static %}
+<html>
+<head>
+	<title>{% block title %}{% endblock %}</title>
+	<meta charset="utf-8">
+  	<meta name="viewport" content="width=device-width, initial-scale=1">
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">	
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>	
+  	<script src="https://kit.fontawesome.com/dbc30a1147.js"></script>
+  	<link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+
+</head>
+<body>
+	<div id="wrap">
+		<header>
+			<div class="container">
+				<a href="{% url 'home' %}">Главная</a>
+				<a href="{% url 'home' %}">Все статьи</a>
+				<nav>
+			  	<ul>
+			 			{% if user.is_authenticated %}
+			   			{% comment %} <li><a href="{% url 'newnotes:profile'%}?next={{request.path}}">Профиль - {{ user.get_username }}</a></li> {% endcomment %}
+			   			<li><a href="#">Welcome, {{user.username}}</a></li>
+              <li><a href="{% url 'logout'%}?next={{request.path}}">Выйти</a></li>
+			 			{% else %}
+			 				{% comment %} <li><a href="{% url 'newnotes:register'%}?next={{request.path}}">Регистрация</a></li> {% endcomment %}
+			   			<li><a href="{% url 'login'%}?next={{request.path}}">Войти</a></li>
+			 			{% endif %} 
+					</ul>
+				</nav>
+			</div>
+		</header>
+		<main>
+			<div class="sidebar">
+				{% block sidebar %}{% endblock %}
+			</div>
+			<div class="container">
+				{% block content %}{% endblock %}
+			</div>
+		</main>
+	</div>
+	<footer>
+		<div class="container">
+			Written by Oleg Sinkel
+		</div>
+	</footer>
+{% block scripts %}
+
+{% endblock %}
+      	
+</body>
 </html>

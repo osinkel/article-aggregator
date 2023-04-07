@@ -1,0 +1,277 @@
+body{
+  height: 100%;
+  background: #777;
+}
+P{
+  color: white;
+}
+h1, h2, h3, h4, h5, h6{
+  color: white;
+}
+
+.container{
+  width: 100%;
+  max-width: 1024px;
+  margin-left: 15% auto;
+  margin-right: 15% auto;
+  padding: 0px 15px;  
+}
+
+.container:after, .row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.sidebar-nav {
+  margin-top: 20px;
+  padding: 0;
+  list-style: none;
+}
+
+#wrap{
+  min-height: 100%;
+}
+
+header{
+  background: #E76D13;
+  line-height: 38px;
+}
+
+main{
+  padding-bottom: 38px;
+}
+
+footer{
+  margin-top: -38px;
+  background: #E76D13;
+  line-height: 38px;
+}
+
+header a{
+  color: #000;
+  padding: 0 10px;
+  margin-left: -0.36em;
+  text-decoration: none;
+}
+header a:hover{
+  color: #000;
+  text-decoration: none;
+}
+nav{
+  float: right;
+}
+
+nav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav li {
+  display: inline-block;
+  padding: 0 10px;
+  margin-left: -0.36em;
+}
+
+.item{
+  background: #C0C0C0;
+  border-radius: 5px;
+  padding: 0 10px;
+  margin-top: 1%;
+  overflow: hidden;
+}
+
+.item-base{
+  width: 98%;
+  float: left;
+
+}
+
+.item-base a:hover{
+  text-decoration: none;
+  outline: none;
+}
+
+.item-remain{
+  width: 2%;
+  float: left;
+  margin-top: 1%;
+}
+
+.article-tools{
+  margin-top: 30%;
+}
+
+.all-functions{
+  list-style: none;
+}
+
+.all-functions li{
+  display: inline-block;
+}
+
+.function{
+  background: #C0C0C0;
+  color: #000;
+  border-radius: 5px;
+  padding: 0 10px;
+  display: inline-block;
+}
+
+.function:hover{
+  background-color: #555;
+  color: white;
+  text-decoration: none;
+  outline: none;
+}
+.sidebar {
+  margin: 0;
+  margin-top: 10px;
+  padding: 0;
+  width: 130px;
+  position: fixed;
+  overflow: auto;
+}
+
+.sidebar a {
+  display: block;
+  color: black;
+  padding: 16px;
+  text-decoration: none;
+}
+
+.sidebar a:hover:not(.active) {
+  background-color: #555;
+  color: white;
+}
+
+@media screen and (max-width: 1280px) {
+  .sidebar {
+    width: 100%;
+    max-width: 1024px;
+    margin: 0px auto;
+    padding: 0px 15px;
+    height: auto;
+    position: relative;
+  }
+  .sidebar a {float: left;}
+}
+
+#box{
+  background: white;
+  list-style: none;
+  border-radius: 5px;
+  position: absolute;
+ /* width: 64.7%;*/
+  width: 100%;
+  max-width: 994px;
+  margin-left: 0 auto;
+  margin-right: 0 auto;
+}
+
+#container:after, .row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+a.box-item, p.box-item{
+  color: #000;
+  padding: 10px;
+  display: block;
+  text-decoration: none;
+}
+p.box-item{
+   color: #000;
+  padding: 10px;
+  display: block;
+  text-decoration: none;
+  padding-top: 20px; 
+}
+
+a.box-item:hover{
+  background: #555;
+  color: white;
+}
+
+input[type=text], input[type=email], input[type=password]{
+  width: 50%;
+  height: 38px;
+  border: 3px solid #ccc;
+  transition: 0.5s;
+  outline: none;
+}
+
+.form textarea{
+  width: 100%;
+  height: 70%;
+  border: 3px solid #ccc;
+  resize: none;
+  outline: none;
+  transition: 0.5s;
+}
+
+.comment textarea{
+  width: 50%;
+  height: 80px;
+  border: 3px solid #ccc;
+  resize: none;
+  outline: none;
+  transition: 0.5s;
+}
+
+input[type=submit]{
+  background-color: white;
+  color: #000;
+  text-decoration: none;
+  margin-top: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+input[type=submit]:hover{
+   background-color: #555;
+   color: white;
+}
+
+input[type=text]:focus, textarea:focus,  input[type=email]:focus, input[type=password]:focus{
+  border: 3px solid #555;
+}
+
+.pagination a{
+  color: #555  !important;
+  text-decoration: none;
+}
+
+.pagination a:hover{
+  color: black;
+}
+
+.pagination>.active>a{
+  background-color: #555;
+  color: white !important;
+  border-color: #555;
+}
+
+.pagination>.active>a:hover{
+  background-color: #555;
+  color: white !important;
+  border-color: #555;
+}
+
+hr{
+  color: white;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.search-input{
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid white;
+  font-size: 12pt;
+  outline: none;
+  text-decoration: none;
+}
