@@ -1,12 +1,20 @@
-{% extends 'base.html'%}
-{% block content%} 
-<p>seen {{no_of_seen}}</p>
-<p>title {{object.title}}</p>
-<p>date {{object.date}}</p>
-<p>description {{object.description}}</p>
-<p>author {{object.author}}</p>
-<hr>
-<h2> Comments </h2>
+{% extends 'base.html' %}
+{% block title %}Статья{% endblock %}
+
+{% block sidebar %}
+	{% for category in categories %}
+		<a href="{% url 'newnotes:view_category' category.id%}">{{category.name}}</a>
+	{% endfor %}
+{% endblock %}
+{% block content %}
+
+	<h3 align="center">{{object.title}}</h3>
+	<p align="center"><em>{{object.author}}, {{object.date}}, прочитано:{{no_of_seen}}</em></p><br>
+	{% comment %} <p align="justify">{{article.content|linebreaksbr}}</p> {% endcomment %}
+   {{object.content|safe}}
+    <hr>
+   
+   <h2> Comments </h2>
 
      {% if user.is_authenticated %}
       <form action="" method="POST" id="main_form" class="comment_form">
@@ -25,8 +33,8 @@
                &nbsp; &nbsp; &nbsp;
                <div class="rating" comment="{{ comment.id }}">
                   <div>{{comment.calculate_rating}}</div>
-                  <button class="rating-btn-plus">+1</button>
-                  <button class="rating-btn-minus">-1</button>
+                  <button class="rating-btn-plus" data-value="1">+1</button>
+                  <button class="rating-btn-minus" data-value="-1">-1</button>
                </div>
                <form action="" method="POST" id="main_form" class="comment_form">
                   <div>
@@ -43,8 +51,8 @@
                &nbsp; &nbsp; &nbsp;
                <div class="rating">
                   <div>{{replies.calculate_rating}}</div>
-                  <button class="rating-btn-plus">+1</button>
-                  <button class="rating-btn-minus">-1</button>
+                  <button class="rating-btn-plus" data-value="1">+1</button>
+                  <button class="rating-btn-minus" data-value="-1">-1</button>
                </div>
                <form action="" method="POST" id="main_form" class="comment_form">
                   <div>
@@ -55,56 +63,61 @@
             </div>
          {% endfor %}
       {% endfor %}
-      
-{% endblock content%}
+{% endblock %}
 
 {% block scripts %}
-
 <script>
+   var csrf_token = "{{csrf_token}}"
+   function set_rating_to_comment(element, value){
+      parent = element.parentElement
+      console.log(parent.nextElementSibling)
+
+      var myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("X-CSRFToken", csrf_token)
+
+      var raw = JSON.stringify({
+         "comment_id": parent.getAttribute('comment'),
+         "comment_rating": value
+      });
+
+      var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+      };
+
+      fetch("{% url 'set_comment_rating' %}", requestOptions)
+        .then(response => response.text())
+        .then(result => {
+            console.log(result)
+            if (JSON.parse(JSON.parse(result)).status == 'OK'){
+               old_rating = parent.children[0].innerHTML
+               parent.children[0].innerHTML = Number(old_rating) + value
+               console.log(Number(old_rating), value)
+               console.log(parent.children[0].innerHTML)
+            }
+         })
+        .catch(error => console.log('error', error));
+   }
+   
    plus_rating = document.querySelectorAll(".rating-btn-plus")
    minus_rating = document.querySelectorAll(".rating-btn-minus")
-
-   for (i=0: plus_rating.length; i++){
-      plus_rating[i].addEventListener("click", function(){
-         parent = this.parentElement
-         $.ajax({
-           url: "{% url 'set_comment_rating' %}",
-           method:"POST",
-           data:{
-            "comment_id": parent.getAttribute('comment'),
-            "comment_rating": 1,
-            "csrfmiddlewaretoken": "{{csrf_token}}"
-           },
-           success: function (data) {
-               if (JSON.parse(data).status == 'OK'){
-                  old_rating = parent.children[0].innerHTML
-                  parent.children[0].innerHTML = +old_rating + 1
-               }
-            }
-         });
-      });
+   console.log('213')
+   let plus_value = 1
+   let minus_value = -1
+   for (i=0; i<plus_rating.length; i++){
+      plus_rating[i].addEventListener("click", function(plus_value) {
+         set_rating_to_comment(this, plus_value)
+      })
    }
 
-   for (i=0: plus_rating.length; i++){
-      plus_rating[i].addEventListener("click", function({
-         parent = this.parentElement
-         $.ajax({
-           url: "{% url 'set_comment_rating' %}",
-           method:"POST",
-           data:{
-            "comment_id": parent.getAttribute('comment'),
-            "comment_rating": -1,
-            "csrfmiddlewaretoken": "{{csrf_token}}"
-           },
-           success: function (data) {
-            if (JSON.parse(data).status == 'OK'){
-               old_rating = parent.children[0].innerHTML
-               parent.children[0].innerHTML = +old_rating - 1
-            }
-         });
-      });
+   for (i=0; i<minus_rating.length; i++){
+      minus_rating[i].addEventListener("click",  function(minus_value) {
+         set_rating_to_comment(this, minus_value)
+      })
    }
 
 </script>
-
 {% endblock scripts %}

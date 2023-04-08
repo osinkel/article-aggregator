@@ -52,7 +52,7 @@ def search_article_by_date(request):
 class HomePageView(generic.ListView):
     template_name = 'articles/home.html'
     model = Article 
-    queryset = Article.objects.order_by('-date')[:10]
+    queryset = Article.objects.order_by('-date')[:30]
 
 
 class ArticleDetailView(generic.DetailView):
@@ -89,7 +89,7 @@ class ArticleDetailView(generic.DetailView):
                 parent=None
         else:
             logger.warning(comment_form.errors.as_data())
-        new_comment = Comment(content=content, user=CustomUser.objects.get(username='test_user'), parent=parent, article=self.get_object())
+        new_comment = Comment(content=content, user=CustomUser.objects.get(id=self.request.user.id), parent=parent, article=self.get_object())
         new_comment.save()
         return redirect(self.request.path_info)
 
@@ -135,7 +135,7 @@ def logout_request(request):
 
 @api_view(['POST'])
 def set_rating_value(request):
-    comment_id, comment_rating =  request.POST['comment_id'], request.POST['comment_rating']
+    comment_id, comment_rating =  request.data['comment_id'], request.data['comment_rating']
     if request.user.is_anonymous:
         response = ResponseMessage(status=Status.USER_NOT_AUTHENTICATED, message='User not authenticated')
         return Response(response.json())

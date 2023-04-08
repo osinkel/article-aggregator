@@ -137,9 +137,9 @@ STATIC_URL = 'static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'aggregator')
 STATIC_ROOT = Path(__file__).resolve().parent
 
-# STATICFILES_DIRS = [
-#     Path(__file__).resolve().parent / "static",
-# ]
+STATICFILES_DIRS = [
+    Path(__file__).resolve().parent / "static",
+]
 
 # STATICFILES_DIRS = [
 #     Path(__file__).resolve().parent / "static",
