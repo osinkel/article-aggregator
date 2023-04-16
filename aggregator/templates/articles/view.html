@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 {% block title %}Статья{% endblock %}
-
 {% block sidebar %}
 	{% for category in categories %}
 		<a href="{% url 'newnotes:view_category' category.id%}">{{category.name}}</a>
@@ -19,17 +18,17 @@
      {% if user.is_authenticated %}
       <form action="" method="POST" id="main_form" class="comment_form">
          <div>
-             <label for="comment">Type Comment here</label>
-            {{ comment_form.content }} {% csrf_token %} <input type="submit" value="Post"></div>
+             <label for="comment">Type comment here...</label>
+            {{ comment_form.content }} {% csrf_token %} <input type="submit" value="Post">
          </div>
       </form>
       {% else %} <h2>You need to Login to comment</h2> 
       {% endif %}
-
+      
       {% for comment in comments %}
          {% if comment.is_parent %}
             <div >
-               <h3> <b>{{ comment.author }} : </b> {{ comment.content }}</h3> 
+               <h3> <b>{{ comment.user }} : </b> {{ comment.content }}</h3> 
                &nbsp; &nbsp; &nbsp;
                <div class="rating" comment="{{ comment.id }}">
                   <div>{{comment.calculate_rating}}</div>
@@ -39,38 +38,43 @@
                <form action="" method="POST" id="main_form" class="comment_form">
                   <div>
                       &nbsp; &nbsp; &nbsp;<label for="comment">Reply here</label>
-                     &nbsp; &nbsp; &nbsp;<input type="text" name="content"> <input type="hidden" value="{{ comment.pk }}" name="parent"> {% csrf_token %} <input type="submit" value="Post"></div>
+                     &nbsp; &nbsp; &nbsp;<input type="text" name="content"> <input type="hidden" value="{{ comment.pk }}" name="parent"> {% csrf_token %} <input type="submit" value="Post">
                   </div>
                </form>
             </div>
          {% endif %}
          
-         {% for replies in comment.children %}
+         {% for reply in comment.children %}
             <div id="comment-block">
-               <h3>&nbsp; &nbsp; &nbsp; <b>{{ comment.author }} : </b> {{ replies.content }}</h3>
+               <h3>&nbsp; &nbsp; &nbsp; <b>{{ reply.user }} : </b> {{ reply.content }}</h3>
                &nbsp; &nbsp; &nbsp;
-               <div class="rating">
-                  <div>{{replies.calculate_rating}}</div>
+               <div class="rating" comment="{{ reply.id }}">
+                  
+                  <div>&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;{{reply.calculate_rating}}</div>
+                  &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
                   <button class="rating-btn-plus" data-value="1">+1</button>
                   <button class="rating-btn-minus" data-value="-1">-1</button>
                </div>
                <form action="" method="POST" id="main_form" class="comment_form">
                   <div>
                       &nbsp; &nbsp; &nbsp;<label for="comment">Reply here</label>
-                     &nbsp; &nbsp; &nbsp;<input type="text" name="content"> <input type="hidden" value="{{ comment.pk }}" name="parent"> {% csrf_token %} <input type="submit" value="Post"></div>
+                     &nbsp; &nbsp; &nbsp;<input type="text" name="content"> <input type="hidden" value="{{ comment.pk }}" name="parent"> {% csrf_token %} <input type="submit" value="Post">
                   </div>
                </form>
             </div>
          {% endfor %}
       {% endfor %}
+   </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+   url = "{% url 'get_comment_rating' comment_id=1 %}"
+   console.log(url)
+
    var csrf_token = "{{csrf_token}}"
    function set_rating_to_comment(element, value){
       parent = element.parentElement
-      console.log(parent.nextElementSibling)
 
       var myHeaders = new Headers();
       myHeaders.append("Content-Type", "application/json");
@@ -91,12 +95,25 @@
       fetch("{% url 'set_comment_rating' %}", requestOptions)
         .then(response => response.text())
         .then(result => {
-            console.log(result)
             if (JSON.parse(JSON.parse(result)).status == 'OK'){
-               old_rating = parent.children[0].innerHTML
-               parent.children[0].innerHTML = Number(old_rating) + value
-               console.log(Number(old_rating), value)
-               console.log(parent.children[0].innerHTML)
+
+
+               var requestOptions = {
+                  method: 'GET',
+                  redirect: 'follow'
+                };
+                comment_id = parent.getAttribute('comment')
+                fetch("{% url 'get_comment_rating' comment_id=1 %}".replace(/1/, comment_id.toString()), requestOptions)
+                  .then(response => response.text())
+                  .then(result => { 
+                     result = JSON.parse(JSON.parse(result))
+                     console.log(result)
+                     if (result.status == 'OK'){
+                        parent.children[0].innerHTML= "&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;" + result.message
+                     }
+                  })
+                  .catch(error => console.log('error', error));
+
             }
          })
         .catch(error => console.log('error', error));
@@ -104,17 +121,16 @@
    
    plus_rating = document.querySelectorAll(".rating-btn-plus")
    minus_rating = document.querySelectorAll(".rating-btn-minus")
-   console.log('213')
    let plus_value = 1
    let minus_value = -1
    for (i=0; i<plus_rating.length; i++){
-      plus_rating[i].addEventListener("click", function(plus_value) {
+      plus_rating[i].addEventListener("click", function() {
          set_rating_to_comment(this, plus_value)
       })
    }
 
    for (i=0; i<minus_rating.length; i++){
-      minus_rating[i].addEventListener("click",  function(minus_value) {
+      minus_rating[i].addEventListener("click",  function() {
          set_rating_to_comment(this, minus_value)
       })
    }

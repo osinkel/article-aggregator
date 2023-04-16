@@ -1,9 +1,10 @@
 import traceback
+from django.http import HttpResponseNotFound
 from django.shortcuts import redirect, render
 from django.views import generic
 from aggregator.forms import CommentForm, NewUserForm
 from aggregator.logic_alternative import parse_domain
-from aggregator.models import Article, ArticleSeenRecord, CustomUser, Domain, Comment, Rating
+from aggregator.models import Article, ArticleSeenRecord, Author, CustomUser, Domain, Comment, Rating
 from aggregator.tasks import parse_article_source
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
@@ -52,7 +53,62 @@ def search_article_by_date(request):
 class HomePageView(generic.ListView):
     template_name = 'articles/home.html'
     model = Article 
-    queryset = Article.objects.order_by('-date')[:30]
+    queryset = Article.objects.order_by('-date')[:6]
+
+
+class ArticleList(generic.ListView):
+    template_name = 'articles/list.html'
+    model = Article 
+    paginate_by = 12
+
+
+class ArticleListByDomain(generic.ListView):
+    template_name = 'articles/list_by_domain.html'
+    model = Article 
+    paginate_by = 12
+    
+    def get_queryset(self, **kwargs):
+       return Article.objects.filter(domain=self.kwargs['pk'])
+        
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        context["domain_obj"] = Domain.objects.get(id=self.kwargs['pk'])
+        return self.render_to_response(context)
+
+
+class ArticleListByAuthor(generic.ListView):
+    template_name = 'articles/list_by_author.html'
+    model = Article 
+    paginate_by = 12
+    
+    def get_queryset(self, **kwargs):
+       return Article.objects.filter(author=self.kwargs['pk'])
+        
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        try:
+            context["author_obj"] = Author.objects.get(id=self.kwargs['pk'])
+        except Author.DoesNotExist:
+             return HttpResponseNotFound("Such author not found")
+        return self.render_to_response(context)
+    
+
+class ArticleListByDate(generic.ListView):
+    template_name = 'articles/list_by_date.html'
+    model = Article 
+    paginate_by = 12
+    
+    def get_queryset(self, **kwargs):
+       date = self.kwargs['date'].split('-')
+       return Article.objects.filter(date__year=date[-1], date__month=date[1], date__day=date[0])
+        
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        context["date"] = self.kwargs['date']
+        return self.render_to_response(context)
 
 
 class ArticleDetailView(generic.DetailView):
@@ -152,6 +208,17 @@ def set_rating_value(request):
             response = ResponseMessage(status=Status.ALREADY_EXIST, message=f'Rating {comment_rating} already exist for comment with id {comment_id}')
     except Exception as exc:
         Rating(user=request.user, value=comment_rating, comment=comment).save()
+    return Response(response.json())
+
+@api_view(['GET'])
+def get_comment_rating_value(request, comment_id):
+    logger.info(request)
+    try:
+        comment = Comment.objects.get(pk=comment_id)
+        response = ResponseMessage(status=Status.OK, message=str(comment.calculate_rating))
+    except Exception as exc:
+        response = ResponseMessage(status=Status.ERROR, message=str(exc))
+         
     return Response(response.json())
 
 

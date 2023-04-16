@@ -29,7 +29,7 @@ class Domain(models.Model):
     )
 
     name = models.CharField(max_length=50)
-    desription = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
     source_url = models.CharField(max_length=100)
     order = models.IntegerField()
     language = models.CharField(max_length=2, choices=LANGUAGES)

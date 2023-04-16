@@ -64,8 +64,8 @@
 		<header>
 			<div class="container">
 				<a href="{% url 'home' %}">Главная</a>
-				<a href="{% url 'home' %}">Все статьи</a>
-				<nav>
+				<a href="{% url 'article_list' %}">Все статьи</a>
+				<nav class="user">
 			  	<ul>
 			 			{% if user.is_authenticated %}
 			   			{% comment %} <li><a href="{% url 'newnotes:profile'%}?next={{request.path}}">Профиль - {{ user.get_username }}</a></li> {% endcomment %}

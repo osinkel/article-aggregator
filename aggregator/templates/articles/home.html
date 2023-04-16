@@ -1,16 +1,29 @@
 {% extends 'base.html'%}
 {% block content%} 
 {% for article in object_list %}
-    <div>
+    <div class="card">
         <a href="{% url 'article_view' article.id%}">
-            <p>title {{article.title}}</p>
-            <p>description {{article.description}}</p>
+            <div class="card-header">
+              <img src="{{article.image}}" alt="rover" />
+            </div>
+            <div class="card-body">
+              <span class="tag tag-teal">
+                {%for category in article.category.all%}
+                    {{category.name}}
+                {%endfor%}
+              </span>
+              <h4>{{article.title}}</h4>
+              <p>{{article.description}}</p>
+              <div class="user">
+                <div class="user-info">
+                  <a href="{% url 'article_list_by_domain' article.domain.id %}"><h5>{{article.domain.name}}</h5></a>
+                  <a href="{% url 'article_list_by_author' article.author.id %}"><h6>Автор - {{article.author.name}}</h6></a>
+                  <a href="{% url 'article_list_by_date' article.date|date:"d-m-Y" %}"><small>{{article.date}}</small></a>
+                </div>
+              </div>
+            </div>
         </a>
-        <p>date {{article.date}}</p>
-        <p>author {{article.author}}</p>
-        
     </div>
-    <hr>
 {% endfor %}
 
 {% endblock content%}
