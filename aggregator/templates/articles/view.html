@@ -10,7 +10,7 @@
 	<h3 align="center">{{object.title}}</h3>
 	<p align="center"><em>{{object.author}}, {{object.date}}, прочитано:{{no_of_seen}}</em></p><br>
 	{% comment %} <p align="justify">{{article.content|linebreaksbr}}</p> {% endcomment %}
-   {{object.content|safe}}
+   <div class="content" align="justify" >{{object.content|safe}}</div>
     <hr>
    
    <h2> Comments </h2>

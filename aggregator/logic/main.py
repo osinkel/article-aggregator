@@ -114,11 +114,8 @@ def parse_rss(tree: etree,  proterty_for_num_articles: ParsingPattern, propertie
                             f'{common_pattern}[{article_num}]{property.pattern}')
                         print(f"error --- {property.pattern} --- {tree_element}")
                         data = ''
-            elif property.name.name == 'date_format':
-                date_format = property.pattern
 
         if not is_article_exist:
-            # date = do_date_format(date, date_format, False if domain.language != 'en' else True)
             date = dateparser.parse(date)
             article.date = date
             article.save()
@@ -178,10 +175,7 @@ def parse_one_article(parse_properties: QuerySet, domain: Domain, article_url: s
             data = unicodedata.normalize('NFKD', tree.xpath(
                 property.pattern)[0].replace('\r\n', '').strip())
             setattr(article, property.name.name, data)
-        elif property.name.name == 'date_format':
-            date_format = property.pattern
-    # date = do_date_format(
-        # date, date_format, False if domain.language != 'en' else True)
+            
     date = dateparser.parse(date)
     article.date = date
     article.save()

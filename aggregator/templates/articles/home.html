@@ -2,23 +2,21 @@
 
 {% comment %} {% block sidebar %}
 	{% for category in categories %}
-		<a href="{% url 'newnotes:view_category' category.id%}">{{category.name}}</a>
+		<a href="{% url 'article_list_by_category' category.id %}">{{category.name}}</a>
 	{% endfor %}
 {% endblock %} {% endcomment %}
-
+{% load static %}
 {% block content%} 
 {% for article in object_list %}
     <div class="card">
         <a href="{% url 'article_view' article.id%}">
             <div class="card-header">
-              <img src="{{article.image}}" alt="rover" />
+              <img src="{% if article.image != ' ' %} {{article.image}} {% else %} {% static '/images/no_image_preview.jpg' %} {% endif %}" alt="rover"/>
             </div>
             <div class="card-body">
-              <span class="tag tag-teal">
-                {%for category in article.category.all%}
-                    {{category.name}}
-                {%endfor%}
-              </span>
+              {%for category in article.category.all%}
+                <a class="tag tag-teal" href="{% url 'article_list_by_category' category.id %}">{{category.name}}</a>
+              {%endfor%}
               <h4>{{article.title}}</h4>
               <p>{{article.description}}</p>
               <div class="user">

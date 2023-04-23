@@ -1,4 +1,5 @@
 {% extends 'base.html'%}
+{% load static %}
 {% block content%} 
 <h3>Author - {{author_obj.name}}</h3>
 <div class="container">     
@@ -6,14 +7,12 @@
     <div class="card">
         <a href="{% url 'article_view' article.id%}">
             <div class="card-header">
-              <img src="{{article.image}}" alt="rover" />
+              <img src="{% if article.image != ' ' %} {{article.image}} {% else %} {% static '/images/no_image_preview.jpg' %} {% endif %}" alt="rover" />
             </div>
             <div class="card-body">
-              <span class="tag tag-teal">
                 {%for category in article.category.all%}
-                    {{category.name}}
+                        <a class="tag tag-teal" href="{% url 'article_list_by_category' category.id %}">{{category.name}}</a>
                 {%endfor%}
-              </span>
               <h4>{{article.title}}</h4>
               <p>{{article.description}}</p>
               <div class="user">

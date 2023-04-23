@@ -61,25 +61,44 @@
 </head>
 <body>
 	<div id="wrap">
-		<header>
-			<div class="sidebar">
-				{% block sidebar %}{% endblock %}
-			</div>
+		<header class="header">
 			<div class="container">
-				<a href="{% url 'home' %}">Главная</a>
-				<a href="{% url 'article_list' %}">Все статьи</a>
-				<nav class="user">
-			  	<ul>
-			 			{% if user.is_authenticated %}
-			   			{% comment %} <li><a href="{% url 'newnotes:profile'%}?next={{request.path}}">Профиль - {{ user.get_username }}</a></li> {% endcomment %}
-			   			<li><a href="#">Welcome, {{user.username}}</a></li>
-              <li><a href="{% url 'logout'%}?next={{request.path}}">Выйти</a></li>
-			 			{% else %}
-			 				{% comment %} <li><a href="{% url 'newnotes:register'%}?next={{request.path}}">Регистрация</a></li> {% endcomment %}
-			   			<li><a href="{% url 'login'%}?next={{request.path}}">Войти</a></li>
-			 			{% endif %} 
+				<nav class="navbar-custom">
+					<ul class="navbar-nav">
+					  	<li class="nav-item"><a href="{% url 'home' %}">Главная</a></li>
+					  	<li class="nav-item"><a href="{% url 'article_list' %}">Все статьи</a></li>
+						  <li class="nav-item has-dropdown">
+
+							<a href="#">Theme</a>
+				  
+							<ul class="dropdown">
+				  
+							  <li class="dropdown-item">
+								<a href="#">light</a>
+							  </li>
+							  <li class="dropdown-item">
+								<a href="#">dark</a>
+							  </li>
+							  <li class="dropdown-item">
+								<a href="#">solarize</a>
+							  </li>
+				  
+							</ul>
+						  </li>
+					  	<li class="nav-item">
+							<nav class="user">
+								<ul>
+									{% if user.is_authenticated %}
+									<li><a href="#">Welcome, {{user.username}}</a></li>
+									<li><a href="{% url 'logout'%}?next={{request.path}}">Выйти</a></li>
+									{% else %}
+									<li><a href="{% url 'login'%}?next={{request.path}}">Войти</a></li>
+									{% endif %} 
+								</ul>
+					  		</nav>
+						</li>
 					</ul>
-				</nav>
+				  </nav>
 			</div>
 		</header>
 		<main>

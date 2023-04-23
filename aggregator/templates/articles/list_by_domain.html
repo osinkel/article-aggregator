@@ -1,4 +1,5 @@
 {% extends 'base.html'%}
+{% load static %}
 {% block content%} 
 <h3>{{domain_obj.name}}</h3>
 <p><em>{{domain_obj.description}}</em></p>
@@ -6,22 +7,20 @@
     <div class="card">
         <a href="{% url 'article_view' article.id%}">
             <div class="card-header">
-              <img src="{{article.image}}" alt="rover" />
+              <img src="{% if article.image != ' ' %} {{article.image}} {% else %} {% static '/images/no_image_preview.jpg' %} {% endif %}" alt="rover" />
             </div>
             <div class="card-body">
-              <span class="tag tag-teal">
                 {%for category in article.category.all%}
-                    {{category.name}}
+                        <a class="tag tag-teal" href="{% url 'article_list_by_category' category.id %}">{{category.name}}</a>
                 {%endfor%}
-              </span>
-              <h4>{{article.title}}</h4>
-              <p>{{article.description}}</p>
-              <div class="user">
-                <div class="user-info">
-                    <a href="{% url 'article_list_by_author' article.author.id %}"><h6>Автор - {{article.author.name}}</h6></a>
-                    <a href="{% url 'article_list_by_date' article.date|date:"d-m-Y" %}"><small>{{article.date}}</small></a>
+                <h4>{{article.title}}</h4>
+                <p>{{article.description}}</p>
+                <div class="user">
+                  <div class="user-info">
+                      <a href="{% url 'article_list_by_author' article.author.id %}"><h6>Автор - {{article.author.name}}</h6></a>
+                      <a href="{% url 'article_list_by_date' article.date|date:"d-m-Y" %}"><small>{{article.date}}</small></a>
+                  </div>
                 </div>
-              </div>
             </div>
         </a>
     </div>

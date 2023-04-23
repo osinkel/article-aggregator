@@ -55,6 +55,12 @@ class HomePageView(generic.ListView):
     model = Article 
     queryset = Article.objects.order_by('-date')[:6]
 
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        context["categories"] = Category.objects.all()
+        return self.render_to_response(context)
+
 
 class ArticleList(generic.ListView):
     template_name = 'articles/list.html'
