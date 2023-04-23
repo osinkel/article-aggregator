@@ -1,6 +1,6 @@
 from django.urls import path
 from aggregator.views import (
-     ArticleDetailView, ArticleList, ArticleListByAuthor, ArticleListByDate, ArticleListByDomain, HomePageView, api_overview, get_comment_rating_value,
+     ArticleDetailView, ArticleList, ArticleListByAuthor, ArticleListByCategory, ArticleListByDate, ArticleListByDomain, HomePageView, api_overview, get_comment_rating_value,
      register_request, login_request, logout_request,
      search_article_by_author, search_article_by_category,
      search_article_by_date, set_rating_value, test_request
@@ -14,6 +14,7 @@ urlpatterns = [
      path("login/", login_request, name="login"),
      path("logout/", logout_request, name="logout"),
      path('articles/', ArticleList.as_view(), name='article_list'),
+     path('articles/category/<slug:pk>', ArticleListByCategory.as_view(), name='article_list_by_category'),
      path('articles/domain/<slug:pk>', ArticleListByDomain.as_view(), name='article_list_by_domain'),
      path('articles/author/<slug:pk>', ArticleListByAuthor.as_view(), name='article_list_by_author'),
      path('articles/date/<str:date>', ArticleListByDate.as_view(), name='article_list_by_date'),

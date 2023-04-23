@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 from django.views import generic
 from aggregator.forms import CommentForm, NewUserForm
 from aggregator.logic_alternative import parse_domain
-from aggregator.models import Article, ArticleSeenRecord, Author, CustomUser, Domain, Comment, Rating
+from aggregator.models import Article, ArticleSeenRecord, Author, Category, CustomUser, Domain, Comment, Rating
 from aggregator.tasks import parse_article_source
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
@@ -60,6 +60,7 @@ class ArticleList(generic.ListView):
     template_name = 'articles/list.html'
     model = Article 
     paginate_by = 12
+    queryset = Article.objects.order_by('-date')
 
 
 class ArticleListByDomain(generic.ListView):
@@ -108,6 +109,24 @@ class ArticleListByDate(generic.ListView):
         self.object_list = self.get_queryset()
         context = self.get_context_data()
         context["date"] = self.kwargs['date']
+        return self.render_to_response(context)
+
+
+class ArticleListByCategory(generic.ListView):
+    template_name = 'articles/list_by_category.html'
+    model = Article 
+    paginate_by = 12
+    
+    def get_queryset(self, **kwargs):
+       return Article.objects.filter(category__pk__in=[self.kwargs['pk'],])
+        
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        try:
+            context["category_obj"] = Category.objects.get(id=self.kwargs['pk'])    
+        except Author.DoesNotExist:
+             return HttpResponseNotFound("Such category not found")
         return self.render_to_response(context)
 
 

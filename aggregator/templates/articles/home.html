@@ -1,4 +1,11 @@
 {% extends 'base.html'%}
+
+{% comment %} {% block sidebar %}
+	{% for category in categories %}
+		<a href="{% url 'newnotes:view_category' category.id%}">{{category.name}}</a>
+	{% endfor %}
+{% endblock %} {% endcomment %}
+
 {% block content%} 
 {% for article in object_list %}
     <div class="card">
