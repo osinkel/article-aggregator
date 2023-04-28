@@ -2,7 +2,7 @@ import traceback
 from django.http import HttpResponseNotFound
 from django.shortcuts import redirect, render
 from django.views import generic
-from aggregator.forms import CommentForm, NewUserForm
+from aggregator.forms import CommentForm, MyAuthForm, NewUserForm
 from aggregator.logic_alternative import parse_domain
 from aggregator.models import Article, ArticleSeenRecord, Author, Category, CustomUser, Domain, Comment, Rating
 from aggregator.tasks import parse_article_source
@@ -68,6 +68,12 @@ class ArticleList(generic.ListView):
     paginate_by = 12
     queryset = Article.objects.order_by('-date')
 
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        context["categories"] = Category.objects.all()
+        return self.render_to_response(context)
+
 
 class ArticleListByDomain(generic.ListView):
     template_name = 'articles/list_by_domain.html'
@@ -81,6 +87,7 @@ class ArticleListByDomain(generic.ListView):
         self.object_list = self.get_queryset()
         context = self.get_context_data()
         context["domain_obj"] = Domain.objects.get(id=self.kwargs['pk'])
+        context["categories"] = Category.objects.all()
         return self.render_to_response(context)
 
 
@@ -99,6 +106,7 @@ class ArticleListByAuthor(generic.ListView):
             context["author_obj"] = Author.objects.get(id=self.kwargs['pk'])
         except Author.DoesNotExist:
              return HttpResponseNotFound("Such author not found")
+        context["categories"] = Category.objects.all()
         return self.render_to_response(context)
     
 
@@ -115,6 +123,7 @@ class ArticleListByDate(generic.ListView):
         self.object_list = self.get_queryset()
         context = self.get_context_data()
         context["date"] = self.kwargs['date']
+        context["categories"] = Category.objects.all()
         return self.render_to_response(context)
 
 
@@ -133,6 +142,7 @@ class ArticleListByCategory(generic.ListView):
             context["category_obj"] = Category.objects.get(id=self.kwargs['pk'])    
         except Author.DoesNotExist:
              return HttpResponseNotFound("Such category not found")
+        context["categories"] = Category.objects.all()
         return self.render_to_response(context)
 
 
@@ -156,6 +166,7 @@ class ArticleDetailView(generic.DetailView):
         data['no_of_comments'] = number_of_comments
         data['comment_form'] = CommentForm()
         data['no_of_seen'] = article.seen_by_article
+        data["categories"] = Category.objects.all()
         return data
 
     def post(self , request , *args , **kwargs):
@@ -178,6 +189,10 @@ class ArticleDetailView(generic.DetailView):
 def register_request(request):
     if request.method == "POST":
         form = NewUserForm(request.POST)
+        username = form.data['username']
+        email = form.data['email']
+        password1 = form.data['password1']
+        password2 = form.data['password2']
         if form.is_valid():
             user = form.save()
             login(request, user)
@@ -186,13 +201,23 @@ def register_request(request):
         else:
             logger.warning(form.errors.as_data())
         messages.error(request, "Unsuccessful registration. Invalid information.")
+        form = NewUserForm(
+                {
+                    'username': username,
+                    'email': email,
+                    'password1': password1,
+                    'password2': password2,
+                }
+            )
     else:
         form = NewUserForm()
-    return render(request=request, template_name="users/register.html", context={"register_form":form})
+    return render(request=request, template_name="users/register.html", context={"register_form":form, "categories": Category.objects.all()})
 
 def login_request(request):
 	if request.method == "POST":
-		form = AuthenticationForm(request, data=request.POST)
+		form = MyAuthForm(request, data=request.POST)
+		username = form.data['username']
+		password = form.data['password']
 		if form.is_valid():
 			username = form.cleaned_data.get('username')
 			password = form.cleaned_data.get('password')
@@ -204,9 +229,13 @@ def login_request(request):
 			else:
 				messages.error(request,"Invalid username or password.")
 		else:
+			logger.warning(form.errors.as_data())
 			messages.error(request,"Invalid username or password.")
-	form = AuthenticationForm()
-	return render(request=request, template_name="users/login.html", context={"login_form":form})
+			form = MyAuthForm({'username': username, 'password': password})
+	else:
+		form = MyAuthForm()
+    
+	return render(request=request, template_name="users/login.html", context={"login_form":form, "categories": Category.objects.all()})
 
 def logout_request(request):
 	logout(request)
