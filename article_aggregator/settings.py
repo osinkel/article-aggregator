@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django_htmx',
     'aggregator.apps.AggregatorConfig',
     'rest_framework',
     'django.contrib.admin',
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'aggregator.CustomUser'
 
 MIDDLEWARE = [
+    'django_htmx.middleware.HtmxMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

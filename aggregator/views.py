@@ -1,8 +1,9 @@
 import traceback
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect, render
 from django.views import generic
 from aggregator.forms import CommentForm, MyAuthForm, NewUserForm
+from aggregator.logic.main import get_articles_from_search
 from aggregator.logic_alternative import parse_domain
 from aggregator.models import Article, ArticleSeenRecord, Author, Category, CustomUser, Domain, Comment, Rating
 from aggregator.tasks import parse_article_source
@@ -14,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-
+from django.core.paginator import Paginator
 import logging
 from django.contrib.auth import get_user_model
 
@@ -59,6 +60,7 @@ class HomePageView(generic.ListView):
         self.object_list = self.get_queryset()
         context = self.get_context_data()
         context["categories"] = Category.objects.all()
+        context = get_articles_from_search(request, context)
         return self.render_to_response(context)
 
 
@@ -72,6 +74,7 @@ class ArticleList(generic.ListView):
         self.object_list = self.get_queryset()
         context = self.get_context_data()
         context["categories"] = Category.objects.all()
+        context = get_articles_from_search(request, context)
         return self.render_to_response(context)
 
 
@@ -88,6 +91,7 @@ class ArticleListByDomain(generic.ListView):
         context = self.get_context_data()
         context["domain_obj"] = Domain.objects.get(id=self.kwargs['pk'])
         context["categories"] = Category.objects.all()
+        context = get_articles_from_search(request, context)
         return self.render_to_response(context)
 
 
@@ -107,6 +111,7 @@ class ArticleListByAuthor(generic.ListView):
         except Author.DoesNotExist:
              return HttpResponseNotFound("Such author not found")
         context["categories"] = Category.objects.all()
+        context = get_articles_from_search(request, context)
         return self.render_to_response(context)
     
 
@@ -124,6 +129,7 @@ class ArticleListByDate(generic.ListView):
         context = self.get_context_data()
         context["date"] = self.kwargs['date']
         context["categories"] = Category.objects.all()
+        context = get_articles_from_search(request, context)
         return self.render_to_response(context)
 
 
@@ -143,7 +149,18 @@ class ArticleListByCategory(generic.ListView):
         except Author.DoesNotExist:
              return HttpResponseNotFound("Such category not found")
         context["categories"] = Category.objects.all()
+        context = get_articles_from_search(request, context)
         return self.render_to_response(context)
+    
+
+def get_data_for_user_profile(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    categories = Category.objects.all()
+    context={'current_user': request.user, 'categories': categories}
+    context = get_articles_from_search(request, context)
+    return render(request=request, template_name="users/profile.html", context=context)
 
 
 class ArticleDetailView(generic.DetailView):
@@ -168,6 +185,11 @@ class ArticleDetailView(generic.DetailView):
         data['no_of_seen'] = article.seen_by_article
         data["categories"] = Category.objects.all()
         return data
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(*args, **kwargs)
+        context = get_articles_from_search(request, context)
+        return self.render_to_response(context)
 
     def post(self , request , *args , **kwargs):
         if self.request.user.is_anonymous:
@@ -187,6 +209,7 @@ class ArticleDetailView(generic.DetailView):
 
 
 def register_request(request):
+    username, email, password1, password2 = '', '', '', ''
     if request.method == "POST":
         form = NewUserForm(request.POST)
         username = form.data['username']
@@ -201,19 +224,21 @@ def register_request(request):
         else:
             logger.warning(form.errors.as_data())
         messages.error(request, "Unsuccessful registration. Invalid information.")
-        form = NewUserForm(
-                {
-                    'username': username,
-                    'email': email,
-                    'password1': password1,
-                    'password2': password2,
-                }
-            )
-    else:
+    else:   
         form = NewUserForm()
-    return render(request=request, template_name="users/register.html", context={"register_form":form, "categories": Category.objects.all()})
+    context={
+        "register_form":form, 
+        "categories": Category.objects.all(),
+        "username": username,
+        "email": email,
+        "password1": password1,
+        "password2": password2
+    }
+    context = get_articles_from_search(request, context)
+    return render(request=request, template_name="users/register.html", context=context)
 
 def login_request(request):
+	username, password = '', ''
 	if request.method == "POST":
 		form = MyAuthForm(request, data=request.POST)
 		username = form.data['username']
@@ -231,11 +256,11 @@ def login_request(request):
 		else:
 			logger.warning(form.errors.as_data())
 			messages.error(request,"Invalid username or password.")
-			form = MyAuthForm({'username': username, 'password': password})
 	else:
 		form = MyAuthForm()
-    
-	return render(request=request, template_name="users/login.html", context={"login_form":form, "categories": Category.objects.all()})
+	context={"login_form":form, "categories": Category.objects.all(), 'username': username, 'password': password}
+	context = get_articles_from_search(request, context)
+	return render(request=request, template_name="users/login.html", context=context)
 
 def logout_request(request):
 	logout(request)
@@ -276,10 +301,20 @@ def get_comment_rating_value(request, comment_id):
     return Response(response.json())
 
 
-@api_view(['GET'])
-def api_overview(request):
-    api_urls = {
-        'url1': 'sadf',
-        'url2': 'adxbwf'
-    }
-    return Response(api_urls)
+def partial_search(request):
+    if request.htmx:
+        search = request.GET.get('q')
+        page_num = request.GET.get('page', 1)
+        if search:
+            articles = Article.objects.filter(title__icontains=search)
+        else:
+            articles = Article.objects.none()
+        page = Paginator(object_list=articles, per_page=5).get_page(page_num)
+        return render(
+            request=request,
+            template_name='articles/partial_results.html',
+            context={
+                'page': page
+            }
+        )
+    return render(request, 'articles/partial_search.html')

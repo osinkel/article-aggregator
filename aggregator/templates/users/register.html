@@ -36,19 +36,35 @@
                         </ul>
                       {% endif %}
                       <div class="form-group">
-                        <input class="form-control" id="{{ register_form.username.id_for_label }}" name="{{ register_form.username.html_name }}" placeholder="{{ register_form.username.html_name|capfirst }}" type="text" />
+                        <input class="form-control" id="{{ register_form.username.id_for_label }}" name="{{ register_form.username.html_name }}" placeholder="{{ register_form.username.html_name|capfirst }}" type="text" 
+                          {% if username %}
+                            value="{{username}}"
+                          {% endif %}
+                        />
                       </div>
 
                       <div class="form-group">
-                        <input class="form-control" id="{{ register_form.email.id_for_label }}" name="{{ register_form.email.html_name }}" placeholder="{{ register_form.email.html_name|capfirst }}" type="email" />
+                        <input class="form-control" id="{{ register_form.email.id_for_label }}" name="{{ register_form.email.html_name }}" placeholder="{{ register_form.email.html_name|capfirst }}" type="email" 
+                          {% if email %}
+                            value="{{email}}"
+                          {% endif %}
+                        />
                       </div>
 
                       <div class="form-group">
-                        <input class="form-control" id="{{ register_form.password1.id_for_label }}" name="{{ register_form.password1.html_name }}" placeholder="Password" type="password" />
+                        <input class="form-control" id="{{ register_form.password1.id_for_label }}" name="{{ register_form.password1.html_name }}" placeholder="Password" type="password" 
+                          {% if password1 %}
+                            value="{{password1}}"
+                          {% endif %}
+                        />
                       </div>
 
                       <div class="form-group">
-                        <input class="form-control" id="{{ register_form.password2.id_for_label }}" name="{{ register_form.password2.html_name }}" placeholder="Repeat password" type="password" />
+                        <input class="form-control" id="{{ register_form.password2.id_for_label }}" name="{{ register_form.password2.html_name }}" placeholder="Repeat password" type="password" 
+                          {% if password2 %}
+                            value="{{password2}}"
+                          {% endif %}
+                        />
                       </div>
 
                       <div class="form-group">

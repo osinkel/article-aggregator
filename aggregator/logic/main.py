@@ -9,6 +9,8 @@ from datetime import datetime
 from aggregator.models import Article, Author, Category, Domain, ParsingPattern
 from django.db.models.query import QuerySet
 import config
+from django.core.paginator import Paginator
+
 
 logger = logging.getLogger()
 
@@ -229,3 +231,14 @@ def do_date_format(date: str, input_format: str, is_english=False) -> datetime:
     return date
 
 
+def get_articles_from_search(request, context):
+    if request.htmx:
+        search = request.GET.get('q')
+        page_num = request.GET.get('page', 1)
+        if search:
+            articles = Article.objects.filter(title__icontains=search)
+        else:
+            articles = Article.objects.none()
+        page = Paginator(object_list=articles, per_page=5).get_page(page_num)
+        context['page'] = page
+    return context
