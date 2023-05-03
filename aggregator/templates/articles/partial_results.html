@@ -1,25 +1,27 @@
 {% load static %}
 <script type="text/javascript" src="{% static 'js/htmx.min.js' %}" defer></script>
-
-{% for article in page.object_list %}
-    <div class="result">
-        {{article.id}}
-        {{article.title}}
-    </div>
-{% endfor %}
-{% if page %}   
-    <div id="load-more">
-        {% if page.has_next %}
-            <div class="load-more">
-                <button
-                    hx-get="{% url 'partial_search' %}"
-                    hx-target="#load-more"
-                    hx-vals='{"q": "{{ request.GET.q }}", "page": "{{ page.next_page_number }}"}'
-                    hx-swap="outerHTML"
-                >
-                    Load More
-                </button>
-            </div>
-        {% endif %}
-    </div>
-{% endif %}
+<ul class="dropdown-results">
+    {% for article in page.object_list %}
+        <li class="result-item">
+            <a href="{% url 'article_view' article.id %}">{{article.title}}</a>
+        </li>
+    
+    {% endfor %}
+    {% if page %}   
+        <div id="load-more">
+            {% if page.has_next %}
+                <a href="#" class="load-more">Остальные результаты</a>
+                {% comment %} <div class="load-more">
+                    <button
+                        hx-get="{% url 'partial_search' %}"
+                        hx-target="#load-more"
+                        hx-vals='{"q": "{{ request.GET.q }}", "page": "{{ page.next_page_number }}"}'
+                        hx-swap="outerHTML"
+                    >
+                        Load More
+                    </button>
+                </div> {% endcomment %}
+            {% endif %}
+        </div>
+    {% endif %}
+</ul>

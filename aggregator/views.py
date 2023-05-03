@@ -160,6 +160,8 @@ def get_data_for_user_profile(request):
     categories = Category.objects.all()
     context={'current_user': request.user, 'categories': categories}
     context = get_articles_from_search(request, context)
+    context['articles_viewed_by_user'] = ArticleSeenRecord.objects.filter(user=request.user)
+    context['user_comments'] = Comment.objects.filter(user=request.user)
     return render(request=request, template_name="users/profile.html", context=context)
 
 
@@ -168,13 +170,15 @@ class ArticleDetailView(generic.DetailView):
     template_name = 'articles/view.html'
 
     def get_context_data(self , **kwargs):
+        self.object = self.get_object()
         data = super().get_context_data(**kwargs)
-        article = self.get_object()
-        try:
-            if not ArticleSeenRecord.objects.get(article=article, user=self.request.user):
+        article = self.object
+        if not self.request.user.is_anonymous:
+            try:
+                if not ArticleSeenRecord.objects.get(article=article, user=self.request.user):
+                    ArticleSeenRecord(user=self.request.user, article=article).save()
+            except:
                 ArticleSeenRecord(user=self.request.user, article=article).save()
-        except:
-            ArticleSeenRecord(user=self.request.user, article=article).save()
         connected_comments = Comment.objects.filter(article=article)
         logger.warning(f'object - {article}')
         logger.warning(f'comments - {connected_comments}')
@@ -318,3 +322,24 @@ def partial_search(request):
             }
         )
     return render(request, 'articles/partial_search.html')
+
+
+
+class ArticleListSearch(generic.ListView):
+    template_name = 'articles/list_search.html'
+    model = Article 
+    paginate_by = 12
+    
+    def get_queryset(self, **kwargs):
+       return Article.objects.filter(title__icontains=[self.kwargs['pk'],])
+        
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        try:
+            context["category_obj"] = Category.objects.get(id=self.kwargs['pk'])    
+        except Author.DoesNotExist:
+             return HttpResponseNotFound("Such category not found")
+        context["categories"] = Category.objects.all()
+        context = get_articles_from_search(request, context)
+        return self.render_to_response(context)

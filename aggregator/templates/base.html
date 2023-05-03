@@ -68,10 +68,10 @@
 					<ul class="navbar-nav">
 					  	<li class="nav-item"><a href="{% url 'home' %}">Главная</a></li>
 					  	<li class="nav-item"><a href="{% url 'article_list' %}">Все статьи</a></li>
-						  <li class="nav-item has-dropdown do-dropdown">
+
+						<li class="nav-item has-dropdown do-dropdown">
 
 							<a href="#">Категории</a>
-				  
 							<ul class="dropdown">
 								{% for category in categories %}
 									<li class="dropdown-item">
@@ -79,7 +79,7 @@
 								  	</li>
 								{% endfor %}
 							</ul>
-						  </li>
+						</li>
 					  	<li class="nav-item">
 							<nav class="user">
 								<ul>
@@ -92,18 +92,19 @@
 								</ul>
 					  		</nav>
 						</li>
-						<li>
-							<input name="q"
-							placeholder="Search for a title"
-							hx-get="{% url 'partial_search' %}"
-							hx-target="#results"
-							hx-trigger="input delay:0.2s"
-					 		>
-							<section id="results">
-								<div class="results">
+						<li class="nav-item">
+							<div class="form">
+								<i class="fa fa-search"></i>
+								<input name="q" class='form-control form-input search-field'
+								placeholder="Поиск..."
+								hx-get="{% url 'partial_search' %}"
+								hx-target="#results"
+								hx-trigger="input delay:0.2s"
+								 >
+								<section id="results" class="results">
 									{% include 'articles/partial_results.html' %}
-								</div>
-							</section>
+								</section>
+							</div>
 						</li>
 					</ul>
 				  </nav>
