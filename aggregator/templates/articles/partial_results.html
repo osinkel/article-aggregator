@@ -7,21 +7,12 @@
         </li>
     
     {% endfor %}
-    {% if page %}   
-        <div id="load-more">
+    {% if page %}
             {% if page.has_next %}
+            <div id="load-more">
                 <a href="#" class="load-more">Остальные результаты</a>
-                {% comment %} <div class="load-more">
-                    <button
-                        hx-get="{% url 'partial_search' %}"
-                        hx-target="#load-more"
-                        hx-vals='{"q": "{{ request.GET.q }}", "page": "{{ page.next_page_number }}"}'
-                        hx-swap="outerHTML"
-                    >
-                        Load More
-                    </button>
-                </div> {% endcomment %}
+            </div>
             {% endif %}
-        </div>
+
     {% endif %}
 </ul>

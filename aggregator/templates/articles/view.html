@@ -11,7 +11,11 @@
 	<p align="center"><em>{{object.author}}, {{object.date}}, прочитано:{{no_of_seen}}</em></p><br>
 	{% comment %} <p align="justify">{{article.content|linebreaksbr}}</p> {% endcomment %}
    <div class="content" align="justify" >{{object.content|safe}}</div>
-    <hr>
+   {% include "articles/comments.html" %}
+   <hr>
+   <h2> Comments </h2>
+
+    {% comment %} <hr>
    
    <h2> Comments </h2>
 
@@ -64,7 +68,7 @@
             </div>
          {% endfor %}
       {% endfor %}
-   </div>
+   </div> {% endcomment %}
 {% endblock %}
 
 {% block scripts %}

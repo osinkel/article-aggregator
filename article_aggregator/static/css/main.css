@@ -436,21 +436,20 @@ hr{
   overflow: auto;
   position: absolute;
   background: #fff;
-  width: 400px;
   max-height: 400px;
+  width: 400px;
   opacity: 0;
   border-radius: 0% 0% 20px 20px;
   transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s, opacity ease-in-out .15s;
   border: 1px solid #ccc;
-  padding: 0;
 }
 
 .results::-webkit-scrollbar {
-  background: transparent;
+  display: none;
 }
 
 .dropdown-results{
-  max-height: 390px;
+  max-height: 400px;
 }
 
 .form-input.search-field:focus ~ .results{
@@ -461,7 +460,16 @@ hr{
 
 .result-item{
   width: 400px;
+  line-height: 28px;
   border-top: 1px solid #ccc;
+  padding-right: 0;
+}
+
+.result-item > a{
+  display: block;
+  height: 100%;
+  width: 100%;
+  text-decoration: none;
 }
 
 #load-more  {

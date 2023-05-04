@@ -1,0 +1,182 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/comments.css' %}">
+
+<div class="comment-thread">
+    {% for comment in comments %}
+
+    <!-- Comment 1 start -->
+    <details open class="comment" id="comment-{{comment.id}}">
+        {% if comment.is_parent %}
+        <a href="#comment-{{comment.id}}" class="comment-border-link">
+            <span class="sr-only">Jump to comment-{{comment.id}}</span>
+        </a>
+        <summary>
+            <div class="comment-heading">
+                <div class="comment-voting" id="{{comment.id}}">
+                    <button type="button">
+                        <span aria-hidden="true">&#9650;</span>
+                        <span class="sr-only">Vote up</span>
+                    </button>
+                    <button type="button">
+                        <span aria-hidden="true">&#9660;</span>
+                        <span class="sr-only">Vote down</span>
+                    </button>
+                </div>
+                <div class="comment-info">
+                    <a href="#" class="comment-author">{{comment.user.name}}</a>
+                    <p class="m-0">
+                        {{comment.calculate_rating}} points &bull; {{comment.date}}
+                    </p>
+                </div>
+            </div>
+        </summary>
+
+        <div class="comment-body">
+            <p>{{comment.content}}</p>
+            <button type="button" data-toggle="reply-form" data-target="{{comment.id}}-reply-form">Ответить</button>
+
+            <!-- Reply form start -->
+            <form method="POST" class="reply-form d-none" id="{{comment.id}}-reply-form">
+                <textarea placeholder="Ответить на комментарий" rows="4"></textarea>
+                <button type="submit">Отправить</button>
+                <button type="button" data-toggle="reply-form" data-target="comment-{{comment.id}}-reply-form">Отмена</button>
+            </form>
+            <!-- Reply form end -->
+        </div>
+        {% endif %}        
+
+        {% if comment.is_parent %}
+        <div class="replies">
+            {% for reply in comment.children %}
+            <!-- Comment 2 start -->
+            <details open class="comment" id="comment-{{reply.id}}">
+                <a href="#comment-{{reply.id}}" class="comment-border-link">
+                    <span class="sr-only">Jump to comment-{{reply.id}}</span>
+                </a>
+                <summary>
+                    <div class="comment-heading">
+                        <div class="comment-voting" id="{{reply.id}}">
+                            <button type="button">
+                                <span aria-hidden="true">&#9650;</span>
+                                <span class="sr-only">Vote up</span>
+                            </button>
+                            <button type="button">
+                                <span aria-hidden="true">&#9660;</span>
+                                <span class="sr-only">Vote down</span>
+                            </button>
+                        </div>
+                        <div class="comment-info">
+                            <a href="#" class="comment-author">{{reply.user.name}}</a>
+                            <p class="m-0">
+                                {{reply.calculate_rating}} points &bull; {{reply.date}}
+                            </p>
+                        </div>
+                    </div>
+                </summary>
+        
+                <div class="comment-body">
+                    <p>{{reply.content}}</p>
+                    <button type="button" data-toggle="reply-form" data-target="{{reply.id}}-reply-form">Ответить</button>
+        
+                    <!-- Reply form start -->
+                    <form method="POST" class="reply-form d-none" id="{{reply.id}}-reply-form">
+                        <textarea placeholder="Reply to comment" rows="4"></textarea>
+                        <button type="submit">Отправить</button>
+                        <button type="button" data-toggle="reply-form" data-target="comment-{{reply.id}}-reply-form">Отмена</button>
+                    </form>
+                    <!-- Reply form end -->
+                </div>
+            </details>
+            <!-- Comment 2 end -->
+        
+            <a href="#load-more">Еще</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </details>
+    <!-- Comment 1 end -->
+
+    {% endfor %}
+</div>
+
+
+<script>
+    document.addEventListener(
+        "click",
+        function (event) {
+            var target = event.target;
+            var replyForm;
+            if (target.matches("[data-toggle='reply-form']")) {
+                replyForm = document.getElementById(target.getAttribute("data-target"));
+                replyForm.classList.toggle("d-none");
+            }
+        },
+        false
+    );
+
+
+    var csrf_token = "{{csrf_token}}"
+    function set_rating_to_comment(element, element_id, value){
+        console.log(element_id, value)
+       parent = element.parentElement
+ 
+       var myHeaders = new Headers();
+       myHeaders.append("Content-Type", "application/json");
+       myHeaders.append("X-CSRFToken", csrf_token)
+ 
+       var raw = JSON.stringify({
+          "comment_id": parent.getAttribute('comment'),
+          "comment_rating": value
+       });
+ 
+       var requestOptions = {
+         method: 'POST',
+         headers: myHeaders,
+         body: raw,
+         redirect: 'follow'
+       };
+ 
+       fetch("{% url 'set_comment_rating' %}", requestOptions)
+         .then(response => response.text())
+         .then(result => {
+             if (JSON.parse(JSON.parse(result)).status == 'OK'){
+ 
+ 
+                var requestOptions = {
+                   method: 'GET',
+                   redirect: 'follow'
+                 };
+                 comment_id = parent.getAttribute('comment')
+                 fetch("{% url 'get_comment_rating' comment_id=1 %}".replace(/1/, comment_id.toString()), requestOptions)
+                   .then(response => response.text())
+                   .then(result => { 
+                      result = JSON.parse(JSON.parse(result))
+                      console.log(result)
+                      if (result.status == 'OK'){
+                         parent.children[0].innerHTML= "&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;" + result.message
+                      }
+                   })
+                   .catch(error => console.log('error', error));
+ 
+             }
+          })
+         .catch(error => console.log('error', error));
+    }
+    vote_btns = document.querySelectorAll(".comment-voting")
+    plus_rating = document.querySelectorAll(".rating-btn-plus")
+    minus_rating = document.querySelectorAll(".rating-btn-minus")
+
+    let plus_value = 1
+    let minus_value = -1
+
+    for (i=0; i<vote_btns.length; i++){
+        let comment_id = vote_btns[i].id
+        vote_btns[i].childNodes[1].addEventListener("click", function() {
+           set_rating_to_comment(this, comment_id, plus_value)
+        })
+        vote_btns[i].childNodes[3].addEventListener("click",  function() {
+            set_rating_to_comment(this, comment_id, minus_value)
+         })
+     }
+
+</script>
