@@ -288,6 +288,7 @@ def set_rating_value(request):
             rating.value = comment_rating
             rating.save()
         else:
+            rating.delete()
             response = ResponseMessage(status=Status.ALREADY_EXIST, message=f'Rating {comment_rating} already exist for comment with id {comment_id}')
     except Exception as exc:
         Rating(user=request.user, value=comment_rating, comment=comment).save()

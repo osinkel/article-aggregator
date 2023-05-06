@@ -10,6 +10,9 @@ from aggregator.models import Article, Author, Category, Domain, ParsingPattern
 from django.db.models.query import QuerySet
 import config
 from django.core.paginator import Paginator
+from googletrans import Translator
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import newspaper
 
 
 logger = logging.getLogger()
@@ -116,10 +119,14 @@ def parse_rss(tree: etree,  proterty_for_num_articles: ParsingPattern, propertie
                             f'{common_pattern}[{article_num}]{property.pattern}')
                         print(f"error --- {property.pattern} --- {tree_element}")
                         data = ''
-
+            
         if not is_article_exist:
             date = dateparser.parse(date)
             article.date = date
+            article.sensitive = calculate_mood_level(get_content_without_tags(article.source_url), domain.language)
+            article.save()
+        elif not article.sensitive:
+            article.sensitive = calculate_mood_level(get_content_without_tags(article.source_url), domain.language)
             article.save()
 
 
@@ -133,12 +140,15 @@ def parse_page(tree: etree, proterty_for_main_page: ParsingPattern, properties: 
             is_article_exist = Article.objects.get(source_url=article_url)
         except Article.DoesNotExist:
             is_article_exist = False
-        except:
-            is_article_exist = True
+        # except:
+        #     is_article_exist = True
         if not is_article_exist:
             parse_one_article(properties, domain, article_url)
             logger.warning(f'{domain.name} parsed {count}')
             count += 1
+        else:
+            is_article_exist.sensitive = calculate_mood_level(get_content_without_tags(is_article_exist.source_url), domain.language)
+            is_article_exist.save()
     return
 
 
@@ -180,6 +190,7 @@ def parse_one_article(parse_properties: QuerySet, domain: Domain, article_url: s
             
     date = dateparser.parse(date)
     article.date = date
+    article.sensitive = calculate_mood_level(get_content_without_tags(article.source_url), domain.language)
     article.save()
 
 
@@ -242,3 +253,19 @@ def get_articles_from_search(request, context):
         page = Paginator(object_list=articles, per_page=5).get_page(page_num)
         context['page'] = page
     return context
+
+
+def calculate_mood_level(text: str, lang: str):
+    translator = Translator()
+    if not 'en' in lang:
+        text = translator.translate(text, dest='en').text
+        
+    sentiment = SentimentIntensityAnalyzer()
+    return sentiment.polarity_scores(text)['compound']
+
+def get_content_without_tags(url: str):
+    article = newspaper.Article(url)
+    article.download()
+    article.parse()
+    return article.text.replace('\n', ' ')
+    

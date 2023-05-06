@@ -83,6 +83,7 @@ class Article(models.Model):
     category = models.ManyToManyField(Category, default=None)
     source_url = models.CharField(max_length=255, default=None)
     image = models.CharField(max_length=255, default=None)
+    sensitive =  models.FloatField(default=0.0)
 
     def __str__(self) -> str:
         return f'{self.guid}, {self.author},'
@@ -90,12 +91,6 @@ class Article(models.Model):
     @property
     def seen_by_article(self):
         return self.articleseenrecord_set.count()
-
-class ArticleSensitiveLevel(models.Model):
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
-    sensitive = models.ForeignKey('Sensitive', on_delete=models.CASCADE)
-    sensitive_valeu = models.FloatField()
-
 
 class Comment(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, db_constraint=False)
@@ -164,5 +159,5 @@ class Sensitive(models.Model):
 
     name = models.CharField(choices=NAMES, max_length=10)
     color = models.CharField(choices=COLORS, max_length=10)
-    min = models.IntegerField(default=None)
-    max = models.IntegerField(default=None)
+    min = models.FloatField(default=None)
+    max = models.FloatField(default=None)

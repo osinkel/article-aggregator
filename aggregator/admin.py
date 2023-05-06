@@ -10,7 +10,6 @@ from aggregator.models import (
     ParsingPatternName,
     Sensitive, 
     Rating,
-    ArticleSensitiveLevel,
     ArticleSeenRecord
 )
 
@@ -28,5 +27,4 @@ admin.site.register(ParsingPattern, ParsingPatternAdmin)
 admin.site.register(ParsingPatternName)
 admin.site.register(Sensitive)
 admin.site.register(Rating)
-admin.site.register(ArticleSensitiveLevel)
 admin.site.register(ArticleSeenRecord)
