@@ -84,6 +84,7 @@ class Article(models.Model):
     source_url = models.CharField(max_length=255, default=None)
     image = models.CharField(max_length=255, default=None)
     sensitive =  models.FloatField(default=0.0)
+    color = "#FFFFFF"
 
     def __str__(self) -> str:
         return f'{self.guid}, {self.author},'
@@ -114,7 +115,6 @@ class Comment(models.Model):
 
     @property
     def calculate_rating(self):
-        logger.warning(f'{self.content} ******************* {sum(rating.value for rating in self.rating_set.all())}')
         return sum(rating.value for rating in self.rating_set.all())
 
     class Meta:
@@ -158,6 +158,7 @@ class Sensitive(models.Model):
     )
 
     name = models.CharField(choices=NAMES, max_length=10)
-    color = models.CharField(choices=COLORS, max_length=10)
+    # color = models.CharField(choices=COLORS, max_length=10)
+    color = models.CharField(default=None, max_length=50)
     min = models.FloatField(default=None)
     max = models.FloatField(default=None)

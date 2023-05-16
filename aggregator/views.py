@@ -3,9 +3,9 @@ from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect, render
 from django.views import generic
 from aggregator.forms import CommentForm, MyAuthForm, NewUserForm
-from aggregator.logic.main import get_articles_from_search
+from aggregator.logic.main import get_articles_from_search, set_sensitive_level_colors
 from aggregator.logic_alternative import parse_domain
-from aggregator.models import Article, ArticleSeenRecord, Author, Category, CustomUser, Domain, Comment, Rating
+from aggregator.models import Article, ArticleSeenRecord, Author, Category, CustomUser, Domain, Comment, Rating, Sensitive
 from aggregator.tasks import parse_article_source
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
@@ -61,6 +61,7 @@ class HomePageView(generic.ListView):
         context = self.get_context_data()
         context["categories"] = Category.objects.all()
         context = get_articles_from_search(request, context)
+        context['object_list'] = set_sensitive_level_colors(context['object_list'])
         return self.render_to_response(context)
 
 
@@ -75,6 +76,7 @@ class ArticleList(generic.ListView):
         context = self.get_context_data()
         context["categories"] = Category.objects.all()
         context = get_articles_from_search(request, context)
+        context['object_list'] = set_sensitive_level_colors(context['object_list'])
         return self.render_to_response(context)
 
 
@@ -84,7 +86,7 @@ class ArticleListByDomain(generic.ListView):
     paginate_by = 12
     
     def get_queryset(self, **kwargs):
-       return Article.objects.filter(domain=self.kwargs['pk'])
+       return Article.objects.filter(domain=self.kwargs['pk']).order_by('-date')
         
     def get(self, request, *args, **kwargs):
         self.object_list = self.get_queryset()
@@ -92,6 +94,7 @@ class ArticleListByDomain(generic.ListView):
         context["domain_obj"] = Domain.objects.get(id=self.kwargs['pk'])
         context["categories"] = Category.objects.all()
         context = get_articles_from_search(request, context)
+        context['object_list'] = set_sensitive_level_colors(context['object_list'])
         return self.render_to_response(context)
 
 
@@ -101,7 +104,7 @@ class ArticleListByAuthor(generic.ListView):
     paginate_by = 12
     
     def get_queryset(self, **kwargs):
-       return Article.objects.filter(author=self.kwargs['pk'])
+       return Article.objects.filter(author=self.kwargs['pk']).order_by('-date')
         
     def get(self, request, *args, **kwargs):
         self.object_list = self.get_queryset()
@@ -112,6 +115,7 @@ class ArticleListByAuthor(generic.ListView):
              return HttpResponseNotFound("Such author not found")
         context["categories"] = Category.objects.all()
         context = get_articles_from_search(request, context)
+        context['object_list'] = set_sensitive_level_colors(context['object_list'])
         return self.render_to_response(context)
     
 
@@ -122,7 +126,7 @@ class ArticleListByDate(generic.ListView):
     
     def get_queryset(self, **kwargs):
        date = self.kwargs['date'].split('-')
-       return Article.objects.filter(date__year=date[-1], date__month=date[1], date__day=date[0])
+       return Article.objects.filter(date__year=date[-1], date__month=date[1], date__day=date[0]).order_by('-date')
         
     def get(self, request, *args, **kwargs):
         self.object_list = self.get_queryset()
@@ -130,6 +134,7 @@ class ArticleListByDate(generic.ListView):
         context["date"] = self.kwargs['date']
         context["categories"] = Category.objects.all()
         context = get_articles_from_search(request, context)
+        context['object_list'] = set_sensitive_level_colors(context['object_list'])
         return self.render_to_response(context)
 
 
@@ -139,7 +144,28 @@ class ArticleListByCategory(generic.ListView):
     paginate_by = 12
     
     def get_queryset(self, **kwargs):
-       return Article.objects.filter(category__pk__in=[self.kwargs['pk'],])
+       return Article.objects.filter(category__pk__in=[self.kwargs['pk'],]).order_by('-date')
+        
+    def get(self, request, *args, **kwargs):
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        try:
+            context["category_obj"] = Category.objects.get(id=self.kwargs['pk'])    
+        except Author.DoesNotExist:
+             return HttpResponseNotFound("Such category not found")
+        context["categories"] = Category.objects.all()
+        context = get_articles_from_search(request, context)
+        context['object_list'] = set_sensitive_level_colors(context['object_list'])
+        return self.render_to_response(context)
+    
+
+class ArticleListSearch(generic.ListView):
+    template_name = 'articles/list_search.html'
+    model = Article 
+    paginate_by = 12
+    
+    def get_queryset(self, **kwargs):
+       return Article.objects.filter(title__icontains=[self.kwargs['title'],])
         
     def get(self, request, *args, **kwargs):
         self.object_list = self.get_queryset()
@@ -323,24 +349,3 @@ def partial_search(request):
             }
         )
     return render(request, 'articles/partial_search.html')
-
-
-
-class ArticleListSearch(generic.ListView):
-    template_name = 'articles/list_search.html'
-    model = Article 
-    paginate_by = 12
-    
-    def get_queryset(self, **kwargs):
-       return Article.objects.filter(title__icontains=[self.kwargs['pk'],])
-        
-    def get(self, request, *args, **kwargs):
-        self.object_list = self.get_queryset()
-        context = self.get_context_data()
-        try:
-            context["category_obj"] = Category.objects.get(id=self.kwargs['pk'])    
-        except Author.DoesNotExist:
-             return HttpResponseNotFound("Such category not found")
-        context["categories"] = Category.objects.all()
-        context = get_articles_from_search(request, context)
-        return self.render_to_response(context)

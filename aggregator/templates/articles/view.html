@@ -9,66 +9,8 @@
 
 	<h3 align="center">{{object.title}}</h3>
 	<p align="center"><em>{{object.author}}, {{object.date}}, прочитано:{{no_of_seen}}</em></p><br>
-	{% comment %} <p align="justify">{{article.content|linebreaksbr}}</p> {% endcomment %}
    <div class="content" align="justify" >{{object.content|safe}}</div>
    {% include "articles/comments.html" %}
-   <hr>
-   <h2> Comments </h2>
-
-    {% comment %} <hr>
-   
-   <h2> Comments </h2>
-
-     {% if user.is_authenticated %}
-      <form action="" method="POST" id="main_form" class="comment_form">
-         <div>
-             <label for="comment">Type comment here...</label>
-            {{ comment_form.content }} {% csrf_token %} <input type="submit" value="Post">
-         </div>
-      </form>
-      {% else %} <h2>You need to Login to comment</h2> 
-      {% endif %}
-      
-      {% for comment in comments %}
-         {% if comment.is_parent %}
-            <div >
-               <h3> <b>{{ comment.user }} : </b> {{ comment.content }}</h3> 
-               &nbsp; &nbsp; &nbsp;
-               <div class="rating" comment="{{ comment.id }}">
-                  <div>{{comment.calculate_rating}}</div>
-                  <button class="rating-btn-plus" data-value="1">+1</button>
-                  <button class="rating-btn-minus" data-value="-1">-1</button>
-               </div>
-               <form action="" method="POST" id="main_form" class="comment_form">
-                  <div>
-                      &nbsp; &nbsp; &nbsp;<label for="comment">Reply here</label>
-                     &nbsp; &nbsp; &nbsp;<input type="text" name="content"> <input type="hidden" value="{{ comment.pk }}" name="parent"> {% csrf_token %} <input type="submit" value="Post">
-                  </div>
-               </form>
-            </div>
-         {% endif %}
-         
-         {% for reply in comment.children %}
-            <div id="comment-block">
-               <h3>&nbsp; &nbsp; &nbsp; <b>{{ reply.user }} : </b> {{ reply.content }}</h3>
-               &nbsp; &nbsp; &nbsp;
-               <div class="rating" comment="{{ reply.id }}">
-                  
-                  <div>&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;{{reply.calculate_rating}}</div>
-                  &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;
-                  <button class="rating-btn-plus" data-value="1">+1</button>
-                  <button class="rating-btn-minus" data-value="-1">-1</button>
-               </div>
-               <form action="" method="POST" id="main_form" class="comment_form">
-                  <div>
-                      &nbsp; &nbsp; &nbsp;<label for="comment">Reply here</label>
-                     &nbsp; &nbsp; &nbsp;<input type="text" name="content"> <input type="hidden" value="{{ comment.pk }}" name="parent"> {% csrf_token %} <input type="submit" value="Post">
-                  </div>
-               </form>
-            </div>
-         {% endfor %}
-      {% endfor %}
-   </div> {% endcomment %}
 {% endblock %}
 
 {% block scripts %}

@@ -2,9 +2,7 @@
 {% load static %}
 {% block content%} 
 
-<h3>{{current_user.username}}</h3>
-<small>{{current_user.email}}</small>
-
+<h4>{{current_user.username}} | {{current_user.email}}</h4>
 
 <div class="profile-list-header">Просмотренные</div>
 <ul class="profile-list">
@@ -20,7 +18,7 @@
 <ul class="profile-list">
     {% for comment in user_comments%}
         <li class="profile-list-item" id="profile-list-item">
-            <p><a href="{% url 'article_view' comment.article.id%}">{{comment.article.title}}</a>, {{comment.content}}, {{comment.date}}</p>
+            <p><a href="{% url 'article_view' comment.article.id%}#comment-{{comment.id}}">{{comment.article.title}}</a>, {{comment.content}}, {{comment.date}}</p>
         </li>
     {% endfor %}
 </ul>

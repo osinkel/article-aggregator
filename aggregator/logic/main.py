@@ -6,7 +6,7 @@ import dateparser
 import requests
 from lxml import etree
 from datetime import datetime
-from aggregator.models import Article, Author, Category, Domain, ParsingPattern
+from aggregator.models import Article, Author, Category, Domain, ParsingPattern, Sensitive
 from django.db.models.query import QuerySet
 import config
 from django.core.paginator import Paginator
@@ -268,4 +268,14 @@ def get_content_without_tags(url: str):
     article.download()
     article.parse()
     return article.text.replace('\n', ' ')
+
+
+def set_sensitive_level_colors(articles: list[Article]):
+    sensitives = Sensitive.objects.all()
+    for article in articles:
+        for sens in sensitives:
+            if sens.min<=article.sensitive<=sens.max:
+                article.color = sens.color
+                break
+    return articles
     

@@ -2,7 +2,7 @@
 {% load static %}
 {% block content%} 
 {% for article in object_list %}
-    <div class="card">
+    <div class="card" style="background-color: {{article.color}}">
         <a href="{% url 'article_view' article.id%}">
             <div class="card-header">
               <img src="{% if article.image != ' ' %} {{article.image}} {% else %} {% static '/images/no_image_preview.jpg' %} {% endif %}" alt="rover"/>

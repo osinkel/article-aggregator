@@ -1,7 +1,14 @@
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/comments.css' %}">
 
-<div class="comment-thread">    
+<div class="comment-thread">
+    <!-- Reply form start -->
+    <form method="POST" class="reply-form" >
+        {% csrf_token %} 
+        <textarea placeholder="{% if user.is_authenticated %}Напишите комментарий...{% else%}Вам нужно авторизоваться чтобы оставить комментарий {% endif %}" rows="4"  name="content" required id="id_content"></textarea>
+        <button type="submit">Отправить</button></form>
+    <!-- Reply form end -->
+
     {% for comment in comments %}
 
     <!-- Comment 1 start -->
@@ -24,7 +31,7 @@
                     </button>
                 </div>
                 <div class="comment-info">
-                    <a href="#" class="comment-author">{{comment.user.name}}</a>
+                    <p class="comment-author">{{comment.user.username}}</p>
                     <p class="m-0">
                          {{comment.calculate_rating}} points &bull; {{comment.date}}
                     </p>
@@ -35,19 +42,15 @@
         <div class="comment-body">
             <p>{{comment.content}}</p>
             <button type="button" data-toggle="reply-form" data-target="{{comment.id}}-reply-form">Ответить</button>
-            {% if user.is_authenticated %}
             <!-- Reply form start -->
             <form method="POST" class="reply-form d-none" id="{{comment.id}}-reply-form">
                 {% csrf_token %} 
-                <textarea placeholder="Ответить на комментарий" rows="4" name="content" required id="id_content"></textarea>
+                <textarea placeholder="{% if user.is_authenticated %}Напишите ответ...{% else%}Вам нужно авторизоваться чтобы оставить комментарий {% endif %}" rows="4" name="content" required id="id_content"></textarea>
                 <input type="hidden" value="{{ comment.pk }}" name="parent">
                 <button type="submit">Отправить</button>
                 <button type="button" data-toggle="reply-form" data-target="comment-{{comment.id}}-reply-form">Отмена</button>
             </form>
             <!-- Reply form end -->
-            {% else %} <h2>You need to Login to comment</h2> 
-            {% endif %}
-
         </div>
 
         {% if comment.is_parent %}
@@ -71,7 +74,7 @@
                             </button>
                         </div>
                         <div class="comment-info">
-                            <a href="#" class="comment-author">{{reply.user.name}}</a>
+                            <p class="comment-author">{{reply.user.username}}</p>
                             <p class="m-0">
                                 {{reply.calculate_rating}} points &bull; {{reply.date}}
                             </p>
@@ -86,20 +89,18 @@
                     <!-- Reply form start -->
                     <form method="POST" class="reply-form d-none" id="{{reply.id}}-reply-form">
                         {% csrf_token %} 
-                        <textarea placeholder="Reply to comment" rows="4" name="content" required id="id_content"></textarea>
+                        <textarea placeholder="{% if user.is_authenticated %}Напишите ответ...{% else%}Вам нужно авторизоваться чтобы оставить комментарий {% endif %}" rows="4" name="content" required id="id_content"></textarea>
                         <input type="hidden" value="{{ comment.pk }}" name="parent">
                         <button type="submit">Отправить</button>
                         <button type="button" data-toggle="reply-form" data-target="comment-{{reply.id}}-reply-form">Отмена</button>
                     </form>
                     <!-- Reply form end -->
-                    {% else %} <h2>You need to Login to comment</h2> 
+                    {% else %} <h2>Вам нужно авторизоваться чтобы оставить комментарий</h2> 
                     {% endif %}
 
                 </div>
             </details>
             <!-- Comment 2 end -->
-        
-            <a href="#load-more">Еще</a>
             {% endfor %}
         </div>
         {% endif %}

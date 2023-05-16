@@ -1,11 +1,3 @@
-/* 
-    Body, button, comment-thread, and utilities
-
-    Notes:
-        - This section sets some basic styles. You can ignore this part and 
-        go directly to the comment styles.
-*/
-
 * {
     box-sizing: border-box;
 }
@@ -86,9 +78,7 @@ button:active {
     font-weight: bold;
     text-decoration: none;
 }
-.comment-author:hover {
-    text-decoration: underline;
-}
+
 .replies {
     margin-left: 20px;
 }
