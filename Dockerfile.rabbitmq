@@ -1,0 +1,13 @@
+FROM rabbitmq:3.10.7-management
+
+ENV RABBITMQ_DEFAULT_USER rabbit_user
+ENV RABBITMQ_DEFAULT_PASS rabbit_password
+ENV RABBITMQ_PID_FILE /var/lib/rabbitmq/mnesia/rabbitmq
+
+ADD rabbit_init.sh /rabbit_init.sh
+RUN chmod +x /rabbit_init.sh
+EXPOSE 5672
+EXPOSE 15672
+
+# Define default command
+CMD ["/rabbit_init.sh"]

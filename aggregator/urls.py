@@ -1,6 +1,9 @@
 from django.urls import path
 from aggregator.views import (
-     ArticleDetailView, ArticleList, ArticleListByAuthor, ArticleListByCategory, ArticleListByDate, ArticleListByDomain, HomePageView, get_comment_rating_value, get_data_for_user_profile, partial_search,
+     ArticleDetailView, ArticleList, ArticleListByAuthor, 
+     ArticleListByCategory, ArticleListByDate, 
+     ArticleListByDomain, HomePageView, get_comment_rating_value, 
+     get_data_for_user_profile, partial_search,
      register_request, login_request, logout_request,
      search_article_by_author, search_article_by_category,
      search_article_by_date, set_rating_value, test_request

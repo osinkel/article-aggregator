@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_celery_results',
-    # 'django_celery_beat'
+    'django_celery_beat'
 ]
 
 AUTH_USER_MODEL = 'aggregator.CustomUser'
@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'article_aggregator.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-import config
+import config, logging
 
 DATABASES = {
     # 'default': {
@@ -155,10 +155,10 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# CELERY_BROKER_URL = 'redis://' + config.REDIS_HOST + ':' + config.REDIS_PORT  + '/0' #'amqp://localhost:5672'
-CELERY_BROKER_URL = f"amqp://{config.RABBITMQ_DEFAULT_USER}:{config.RABBITMQ_DEFAULT_PASS}@localhost:5672/"
+CELERY_BROKER_URL = 'redis://' + config.REDIS_HOST + ':' + config.REDIS_PORT  + '/0' #'amqp://localhost:5672'
+# CELERY_BROKER_URL = f"amqp://{config.RABBITMQ_DEFAULT_USER}:{config.RABBITMQ_DEFAULT_PASS}@{config.RABBITMQ_DEFAULT_HOST}:{config.RABBITMQ_DEFAULT_PORT}"
 # CELERY_BROKER_URL = 'amqp://rabbit_user:rabbit_password@rabbitmq:5672/vhost'
-# CELERY_RESULT_BACKEND = 'redis://' + config.REDIS_HOST + ':' + config.REDIS_PORT  + '/0' # 'amqp://localhost:5672'
+CELERY_RESULT_BACKEND = 'redis://' + config.REDIS_HOST + ':' + config.REDIS_PORT  + '/0' # 'amqp://localhost:5672'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -166,18 +166,28 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'default'
 
+logger = logging.getLogger()
+logger.info("**********************************")
+logger.info(config.POSTGRES_DB)
+logger.info(config.POSTGRES_USER)
+logger.info(config.POSTGRES_PASSWORD)
+logger.info(config.POSTGRES_HOST)
+logger.info(config.POSTGRES_PORT)
+print("**********************************")
+print(config.POSTGRES_DB)
+print(config.POSTGRES_USER)
+print(config.POSTGRES_PASSWORD)
+print(config.POSTGRES_HOST)
+print(config.POSTGRES_PORT)
+print(CELERY_BROKER_URL)
+
+
 from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = { # scheduler configuration 
-    'task_one_schedule' : {  # whatever the name you want 
-        'task': 'aggregator.tasks.parse_article_source', # name of task with path
-        'schedule': crontab(minute='*/5'), # crontab() runs the tasks every minute
-        'kwargs': {'domain_name_to_parse': 'devby.io'}
+    'articles_aggreation_task' : {  # whatever the name you want 
+        'task': 'aggregator.tasks.aggregate_articles', # name of task with path
+        'schedule': crontab(minute='*/2'), # crontab() runs the tasks every 5 minutes
     },
-    'task_two_schedule' : {  # whatever the name you want 
-        'task': 'aggregator.tasks.parse_article_source', # name of task with path
-        'schedule': crontab(minute='*/5'), # crontab() runs the tasks every minute
-        'kwargs': {'domain_name_to_parse': 'aif.ru'}
-    }
 }
 
 CACHES = {

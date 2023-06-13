@@ -1,5 +1,6 @@
 import datetime
 import logging
+import traceback
 from typing import Any
 import unicodedata
 import dateparser
@@ -39,13 +40,13 @@ def create_etree(url) -> Any | None:
         response = requests.get(url, timeout=5)
         content = response.content.decode(response.encoding)
         logger.warning(f'tree for {url} successfully parsed!')
-    except Exception as exc:
-        logger.error(exc)
-        return None
+    except:
+        logger.info(traceback.format_exc())
+        return
     try:
         parser = etree.HTMLParser()
         page_tree = etree.fromstring(content, parser)
-    except Exception as exc:
+    except:
         page_tree = etree.fromstring(bytes(content, encoding='utf-8'))
     return page_tree
 
@@ -62,72 +63,78 @@ def parse_rss(tree: etree,  proterty_for_num_articles: ParsingPattern, propertie
         is_article_exist = False
         article = Article(title=' ', content=' ', description=' ',
                           image=' ', source_url=' ', guid=' ', domain=domain)
-        article.save()
-        for property in properties:
-            if property.is_for_parsing:
-                if property.name.name == 'pub_date':
-                    date = tree.xpath(
-                        f'{common_pattern}[{article_num}]{property.pattern}')[0]
-                    continue
-                elif property.name.name == 'category':
-                    categories_name = tree.xpath(
-                        f'{common_pattern}[{article_num}]{property.pattern}')
-                    for category_name in categories_name:
-                        last_order = Category.objects.last()
-                        category = Category.objects.get_or_create(
-                            name=category_name.replace('\r\n', '').strip(), order=1 if last_order is None else last_order.order)
-                        article.category.add(category[0])
-                    continue
-                elif property.name.name == 'author':
-                    try:
-                        author_name = tree.xpath(f'{common_pattern}[{article_num}]{property.pattern}')[
-                            0].replace('\r\n', '').strip()
-                        author = Author.objects.get_or_create(
-                            name=author_name, domain=domain)
-                        article.author = author[0]
-                    except Exception as exc:
-                        logger.warning(f"article {article_num} haven't author")
-                        author_name = config.UNKNOWN_AUTHOR_NAME
-                        author = Author.objects.get_or_create(name=author_name, domain=domain)
-                        article.author = author[0]
-                    continue
-                elif property.name.name == 'guid':
-                    source_url = tree.xpath(f'{common_pattern}[{article_num}]{property.pattern}')[
-                        0].replace('\r\n', '').strip()
-                    try:
-                        is_article_exist = Article.objects.get(
-                            source_url=source_url)
-                        logger.warning(is_article_exist)
-                    except Article.DoesNotExist:
-                        is_article_exist = False
-                    if is_article_exist:
-                        logger.warning('Article exists!')
-                        article.delete()
-                        logger.warning('Article was deleted')
-                        break
-                    logger.warning(f"{domain.name} parsed {count}")
-                    count+=1
-                    article.guid = source_url.rsplit('/', 1)[-1]
-                    article.source_url = source_url
-                else:
-                    try:
-                        data = unicodedata.normalize('NFKD', tree.xpath(
-                            f'{common_pattern}[{article_num}]{property.pattern}')[0].replace('\r\n', '').strip())
-                        setattr(article, property.name.name, data)
-                    except:
-                        tree_element = tree.xpath(
+        article.save() # Needs to create relationships. You can't add relationship if object not in database
+        try:
+            for property in properties:
+                if property.is_for_parsing:
+                    if property.name.name == 'pub_date':
+                        date = tree.xpath(
+                            f'{common_pattern}[{article_num}]{property.pattern}')[0]
+                        continue
+                    elif property.name.name == 'category':
+                        categories_name = tree.xpath(
                             f'{common_pattern}[{article_num}]{property.pattern}')
-                        print(f"error --- {property.pattern} --- {tree_element}")
-                        data = ''
-            
-        if not is_article_exist:
-            date = dateparser.parse(date)
-            article.date = date
-            article.sensitive = calculate_mood_level(get_content_without_tags(article.source_url), domain.language)
-            article.save()
-        elif not article.sensitive:
-            article.sensitive = calculate_mood_level(get_content_without_tags(article.source_url), domain.language)
-            article.save()
+                        for category_name in categories_name:
+                            last_order = Category.objects.last()
+                            try:
+                                category = Category.objects.filter(name=category_name.replace('\r\n', '').strip(), order=1 if last_order is None else last_order.order)[0]
+                            except IndexError:
+                                category = Category(name=category_name.replace('\r\n', '').strip(), order=1 if last_order is None else last_order.order)
+                                category.save()
+                            article.category.add(category)
+                        continue
+                    elif property.name.name == 'author':
+                        try:
+                            author_name = tree.xpath(f'{common_pattern}[{article_num}]{property.pattern}')[
+                                0].replace('\r\n', '').strip()
+                            author = Author.objects.get_or_create(
+                                name=author_name, domain=domain)
+                            article.author = author[0]
+                        except Exception as exc:
+                            logger.warning(f"article {article_num} haven't author")
+                            author_name = config.UNKNOWN_AUTHOR_NAME
+                            author = Author.objects.get_or_create(name=author_name, domain=domain)
+                            article.author = author[0]
+                        continue
+                    elif property.name.name == 'guid':
+                        source_url = tree.xpath(f'{common_pattern}[{article_num}]{property.pattern}')[
+                            0].replace('\r\n', '').strip()
+                        try:
+                            is_article_exist = Article.objects.get(
+                                source_url=source_url)
+                            logger.warning(is_article_exist)
+                        except Article.DoesNotExist:
+                            is_article_exist = False
+                        if is_article_exist:
+                            logger.warning('Article exists!')
+                            article.delete()
+                            break
+                        logger.warning(f"{domain.name} parsed {count}")
+                        count+=1
+                        article.guid = source_url.rsplit('/', 1)[-1]
+                        article.source_url = source_url
+                    else:
+                        try:
+                            data = unicodedata.normalize('NFKD', tree.xpath(
+                                f'{common_pattern}[{article_num}]{property.pattern}')[0].replace('\r\n', '').strip())
+                            setattr(article, property.name.name, data)
+                        except:
+                            tree_element = tree.xpath(
+                                f'{common_pattern}[{article_num}]{property.pattern}')
+                            print(f"error --- {property.pattern} --- {property.name.name} --- {tree_element} --- {article_num}")
+                            data = ''
+            else:
+                if not is_article_exist:
+                    date = dateparser.parse(date)
+                    article.date = date
+                    article.sensitive = calculate_mood_level(get_content_without_tags(article.source_url), domain.language)
+                    article.save()
+                elif not article.sensitive:
+                    article.sensitive = calculate_mood_level(get_content_without_tags(article.source_url), domain.language)
+                    article.save()
+        except:
+            logger.info(traceback.format_exc())
+            continue
 
 
 def parse_page(tree: etree, proterty_for_main_page: ParsingPattern, properties: QuerySet[ParsingPattern], domain: Domain) -> None:
@@ -171,9 +178,12 @@ def parse_one_article(parse_properties: QuerySet, domain: Domain, article_url: s
                 categories_name = tree.xpath(property.pattern)
                 for category_name in categories_name:
                     last_order = Category.objects.last()
-                    category = Category.objects.get_or_create(
-                        name=category_name, order=1 if last_order is None else last_order.order)
-                    article.category.add(category[0])
+                    try:
+                        category = Category.objects.filter(name=category_name, order=1 if last_order is None else last_order.order)[0]
+                    except IndexError:
+                        category = Category(name=category_name, order=1 if last_order is None else last_order.order)
+                        category.save()
+                    article.category.add(category)
                 continue
             if property.name.name == 'author':
                 author_name = tree.xpath(property.pattern)[0]
@@ -266,7 +276,10 @@ def calculate_mood_level(text: str, lang: str):
 def get_content_without_tags(url: str):
     article = newspaper.Article(url)
     article.download()
-    article.parse()
+    try:
+        article.parse()
+    except:
+        logger.info(f"Newspaper can't extract text from {url}")
     return article.text.replace('\n', ' ')
 
 

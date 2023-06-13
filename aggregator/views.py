@@ -1,5 +1,5 @@
 import traceback
-from django.http import HttpResponseForbidden, HttpResponseNotFound
+from django.http import HttpResponseForbidden, HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect, render
 from django.views import generic
 from aggregator.forms import CommentForm, MyAuthForm, NewUserForm
